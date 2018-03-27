@@ -1,0 +1,124 @@
+
+* {
+	margin: 0px;
+	padding: 0px;
+	box-sizing: border-box;
+}
+header {
+  margin: 0px;
+  background-color: black;
+  padding: 20px;
+  background-image: url(./tic-tac.png);
+  color: black;
+}
+h1,h2 {
+  margin-top: 10px;
+  color: black;
+}
+body, html {
+  /*background-image: url(./tic-tac.png);*/
+  background-color: #FFFAF0;
+  margin: 0px;
+  font-family: 'lato';
+  font-size: 20px;
+  background-color: #;
+  text-align: center;
+	height: 100%;
+}
+button,#submit,#regSubmit {
+  border: 1px solid black;
+  background-color: white;
+  font-size: 14px;
+  margin-top: 30px;
+  margin-left: 10px;
+  padding: 10px;
+  color: black;
+}
+section {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+  background-color: #262626;
+  width: 20%;
+  height: 30%;
+  position: fixed;
+  left: 40%;
+  top: 25%;
+}
+#registerSection {
+
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    background-color: #262626;
+    width: 20%;
+    height: 50%;
+    position: fixed;
+    left: 40%;
+    top: 25%;
+
+}
+#tutorial {
+    position: fixed;
+    left: 37%;
+    top:48%;
+    text-decoration: none;
+    color: initial;
+    border: 1px solid black;
+    margin: 100px;
+    background-color: black;
+    color: white;
+    font-size: 15px;
+    padding: 7px;
+}
+label {
+  color: white;
+  margin: 7px;
+  /* padding: 40px 10px 10px 10px; */
+}
+input {
+  margin: 7px;
+}
+
+form {
+	color: #666666;
+	margin: 0px;
+}
+#features {
+  background-color: black;
+  color: white;
+  position: fixed;
+  top: 56.5%;
+  padding: 7px;
+  left: 51%;
+}
+#firstname,#lastname,#username,#password,#email,#password {
+  color: black;
+}
+#register {
+  text-decoration: none;
+  color: initial;
+  border: 1px solid black;
+  background-color: white;
+  font-size: 14px;
+  margin-top: 30px;
+  margin-left: 10px;
+  padding: 10px;
+}
+
+#submit:hover{
+  background-color: black;
+  color: white;
+}
+#regSubmit:hover{
+  color: white;
+  background-color:black;
+}
+#register:hover{
+  background-color: black;
+  color: white;
+}
+button:hover{
+  background-color: black;
+  color: white;
+}
