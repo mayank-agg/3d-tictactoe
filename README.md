@@ -6,4 +6,4 @@ Future Ideas:
 
 Players will be able to chat while playing. 
 
-Players can edit their profiles and change their usernames, passwords, names etc. 
+Players can edit their profiles and change their usernames, passwords, etc. 
