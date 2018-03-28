@@ -1,0 +1,68 @@
+
+body{
+  background-color: #000;
+}
+
+nav{
+  width:100%;
+  height:15vh;
+  background-color: #7d7d92a3;
+  border-color: black;
+  border-style: solid;
+  border-width:1px;
+}
+
+
+nav ul{
+  position:relative;
+  list-style-type: none;
+  float:right;
+  top:25%;
+  margin-right:2%;
+}
+
+nav button{
+  font-size:35px;
+  border-radius:5px;
+  background-color:#7f7f8a;
+  border:none;
+
+}
+
+.grid-btn{
+  
+}
+
+#grid-container{
+  position:fixed;
+  left:40vw;
+  top:40vh;
+
+}
+
+
+#logout-text{
+  position: relative;
+  font-size: 20px;
+}
+#header-container{
+  position: fixed;
+  background-color: #e6e6e6;
+  top:15vh;
+  height: 13vh;
+  width:100%;
+}
+#game-header{
+  float:left;
+  margin-left:15%;
+  margin-top:1%;
+  font-size: 35px;
+  font-style: bold;
+}
+#game-timer{
+  float:right;
+  margin-right:20%;
+  margin-top:2%;
+  font-size: 20px;
+  font-style: bold;
+}

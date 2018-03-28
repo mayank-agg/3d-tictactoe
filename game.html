@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <title>3D TicTacToe!</title>
+   <script src='./jquery-3.3.1.min.js'></script>
+   <script src='./game.js'></script>
+   <link href = './game.css' rel = 'stylesheet' type='text/css'/>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+ </head>
+ <body>
+   <nav id='nav-bar'>
+     <ul>
+       <li>
+       <button id='logout-btn'>
+         <span class="glyphicon glyphicon-log-out"></span>
+         <span id='logout-text'>Log out</span>
+       </button>
+     </li>
+     </ul>
+   </nav>
+   <div id='header-container'>
+     <span id='game-header'>Player1 vs Player2</span>
+     <span id='game-timer'>Time: 00:00</span>
+   </div>
+   <hr/>
+   <div id='grid-container'>
+     <div id = 'smart-overlay'></div>
+   </div>
+ </body>
+</html>
