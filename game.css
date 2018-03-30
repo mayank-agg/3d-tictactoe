@@ -29,15 +29,10 @@ nav button{
 
 }
 
-.grid-btn{
-  
-}
-
 #grid-container{
   position:fixed;
   left:40vw;
-  top:40vh;
-
+  top:30vh;
 }
 
 
