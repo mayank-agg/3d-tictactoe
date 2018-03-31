@@ -1,3 +1,8 @@
+var socket= io("http://localhost:33108");
+var playername;
+var clientName;
+clientName= prompt("What would you like to be called?");
+
 var clickId = 'x';
 
 var mCells = new Object;
@@ -92,6 +97,7 @@ function createGrid(cols,rows,options,margin){
 }
 
 function onButtonClick(){
+
   var cell = event.target;
   cell.style.color = 'blue';
   cell.style.fontWeight = 'bold';
@@ -102,7 +108,7 @@ function onButtonClick(){
   var row = getCellRow(cell.id);
   var grid = getcellGridNumber(cell.id);
 
-  alert(col + ',' + row + ',' + grid);
+  socket.emit('madeMove', clickId,col,row,grid);
 }
 
 function getCellCol(id){
@@ -115,4 +121,62 @@ function getCellRow(id){
 
 function getcellGridNumber(id){
   return mCells[id].grid;
+}
+
+var logoutBut= document.getElementById('logout-btn');
+logoutBut.addEventListener('click', function()
+{
+  socket.close();  //will emit disconnect event.
+});
+logoutBut.addEventListener('click', function()
+{
+  location.href= '/logout';
+});
+/*socket.on('welcome', function(playerName)
+{
+  playername= playerName;
+  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. Please start the game. ");
+});*/
+socket.on('newMove', function(clickId,col,row,grid)
+{
+  col= col.toString();
+  row= row.toString();
+  var makeID= row+col+grid;
+  //makeID= makeID.toString();
+  console.log(makeID);
+  var myCell= document.getElementById(makeID);
+  myCell.style.color = 'blue';
+  myCell.style.fontWeight = 'bold';
+  myCell.innerText = clickId;
+});
+socket.on('playerJoined', function(playerName)
+{
+  alert(playerName+" joined!");
+});
+socket.on('playerLeft', function(playerName)
+{
+  alert("Someone left!");
+});
+
+document.forms[0].onsubmit = function () {
+    var input = document.getElementById("message");
+		var msg = clientName+": " + input.value;
+    printMessage(msg);
+    console.log(msg);
+    socket.emit('chat',msg);
+    input.value = '';
+};
+socket.on('message', function(message)
+{
+  printMessage(message);
+});
+function printMessage(message) {
+    var p = document.createElement("p");
+    console.log(message);
+    p.style.color= 'white';
+    p.style.margin= "5px";
+    p.innerText = message;
+    console.log(p);
+  //  document.querySelector("div.messages").appendChild(p);
+  document.getElementById("box").appendChild(p);
 }

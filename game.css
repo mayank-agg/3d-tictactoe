@@ -1,3 +1,33 @@
+#box {
+  width: 350px;
+  height: auto;
+  background-color: black;
+  position: fixed;
+  top: 30%;
+  left: 2%;
+}
+#title {
+  background-color: black;
+  color: white;
+  text-align: center;
+  font-size: 20px;
+  margin-top: 2px;
+  margin-bottom: -10px;
+
+}
+
+#logout {
+  position: absolute;
+  bottom: 10;
+}
+#messageForm {
+  position: relative;
+  top: 90%;
+  left: 2%;
+}
+#message {
+  margin: 5px;
+}
 
 body{
   background-color: #000;
