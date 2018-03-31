@@ -1,6 +1,6 @@
 var clickId = 'x';
 
-
+var mCells = new Object;
 window.onload = function(){
   var options1 = {
     width:50,
@@ -41,15 +41,18 @@ function createGrid(cols,rows,options,margin){
   for(var i=0;i<cols;i++){
     for(var j=0;j<rows;j++){
       var button = document.createElement('button');
-      button.col = i;
-      button.row = j;
+      button.row = i;
+      button.col = j;
       button.grid = options.containerId;
+
+      button.setAttribute('id',button.row+''+button.col+''+button.grid);
       button.style.width = options.width + 'px';
       button.style.height = options.height + 'px';
 
       button.style.borderStyle = 'solid';
       button.style.borderWidth = options.offset + 'px';
       button.style.outline = '0';
+
 
       button.setAttribute('class','grid-btn');
 
@@ -76,8 +79,9 @@ function createGrid(cols,rows,options,margin){
         button.style.borderBottomWidth = '0px';
       }
       button.innerText = 'o';
-      button.setAttribute('onclick','onButtonClick(this)');
+      button.setAttribute('onclick','onButtonClick()');
       container.appendChild(button);
+      mCells[button.id] = button;
     }
     container.innerHTML += '<br/>'
   }
@@ -87,8 +91,28 @@ function createGrid(cols,rows,options,margin){
   grid.innerHTML += '<br/>';
 }
 
-function onButtonClick(b){
-  b.style.color = 'blue';
-  b.style.fontWeight = 'bold';
-  b.innerText = clickId;
+function onButtonClick(){
+  var cell = event.target;
+  cell.style.color = 'blue';
+  cell.style.fontWeight = 'bold';
+  cell.innerText = clickId;
+
+  //example usage of getting cell col row and grid
+  var col = getCellCol(cell.id);
+  var row = getCellRow(cell.id);
+  var grid = getcellGridNumber(cell.id);
+
+  alert(col + ',' + row + ',' + grid);
+}
+
+function getCellCol(id){
+  return mCells[id].col;
+}
+
+function getCellRow(id){
+  return mCells[id].row;
+}
+
+function getcellGridNumber(id){
+  return mCells[id].grid;
 }
