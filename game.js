@@ -132,11 +132,19 @@ logoutBut.addEventListener('click', function()
 {
   location.href= '/logout';
 });
-/*socket.on('welcome', function(playerName)
+socket.on('welcome', function(playerName, roomNum, numPlayers)
 {
   playername= playerName;
-  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. Please start the game. ");
-});*/
+//  if(numPlayers == 1)
+  //{
+    //  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are currently in room: "+roomNum+". The room is currently empty. Please wait.");
+    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. ");
+//  }
+
+/*  else {
+    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are currently in room: "+roomNum+". There are currently"+numPlayers+" players. ");
+  }*/
+});
 socket.on('newMove', function(clickId,col,row,grid)
 {
   col= col.toString();
@@ -151,11 +159,11 @@ socket.on('newMove', function(clickId,col,row,grid)
 });
 socket.on('playerJoined', function(playerName)
 {
-  console.log(playerName + 'has joined');
+  alert(playerName+" joined!");
 });
 socket.on('playerLeft', function(playerName)
 {
-
+  alert("Someone left!");
 });
 
 document.forms[0].onsubmit = function () {
