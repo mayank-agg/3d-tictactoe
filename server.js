@@ -20,7 +20,26 @@ var userCollection;
 var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
 
 var currentPlayers= [];
-var roomNum=0;
+//create and keep track of running channels
+var rooms = new Object();
+var numOfRooms = 0;
+function addUserToNewRoom(user){
+  rooms[numOfRooms] = new Array();
+  rooms[numOfRooms].push(user);
+  numOfRooms++;
+}
+function joinRoom(user){
+  if(numOfRooms == 0){
+    addUserToNewRoom(user);
+  }else{
+    var pendingRoom = room + '' + numOfRooms - 1;
+    if(rooms[pendingRoom].length < 2){
+      rooms[pendingRoom].push(user);
+    }else{
+      addUserToNewRoom(user);
+    }
+  }
+}
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
 {
@@ -47,6 +66,7 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   socket.on('disconnect', function()
   {
       socket.broadcast.emit('playerLeft');
+
   //  io.sockets.in("room"+roomNum).emit('playerLeft');
   });
   socket.on('chat', function(message){
@@ -333,8 +353,12 @@ app.get('/myStats',isLoggedIn, function(req, res)
 
   var toServe= `<!DOCTYPE html>
   <html>
+  <head>
+  <script src='./jquery-3.3.1.min.js'></script>
+  <script src = 'stat.js'></script>
+  </head>
    <body>
-   <a href= "/game"> Play game </a>
+   <button onclick = 'onJoinGameClicked()'> Join Game </button>
    <a href= '/logout'> Logout </a>
    </body></html>`;
 
