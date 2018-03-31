@@ -151,11 +151,11 @@ socket.on('newMove', function(clickId,col,row,grid)
 });
 socket.on('playerJoined', function(playerName)
 {
-  alert(playerName+" joined!");
+  console.log(playerName + 'has joined');
 });
 socket.on('playerLeft', function(playerName)
 {
-  alert("Someone left!");
+
 });
 
 document.forms[0].onsubmit = function () {
