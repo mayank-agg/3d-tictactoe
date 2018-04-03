@@ -28,17 +28,24 @@ function addUserToNewRoom(user){
   rooms[numOfRooms].push(user);
   numOfRooms++;
 }
-function joinRoom(user){
+function joinRoom(user,socket){
   if(numOfRooms == 0){
     addUserToNewRoom(user);
+    socket.join("room"+numOfRooms);
+    return false;
   }else{
     var pendingRoom = room + '' + numOfRooms - 1;
     if(rooms[pendingRoom].length < 2){
       rooms[pendingRoom].push(user);
+      socket.join(pendingRoom);
+      return true;
     }else{
       addUserToNewRoom(user);
+      socket.join("room"+numOfRooms);
+      return false;
     }
   }
+  console.log(rooms);
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
@@ -72,6 +79,14 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   socket.on('chat', function(message){
     socket.broadcast.emit('message',message);
     //io.sockets.in("room"+roomNum).emit('message', message);
+  });
+
+  socket.on('JoinRoom',function(user){
+    if(joinRoom(user)){
+      //direct to game page as we have 2 players in one room
+    }else{
+      //redirect to stats page saying that we are waiting for another player to join room
+    }
   });
 });
 
