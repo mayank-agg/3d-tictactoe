@@ -185,6 +185,8 @@ app.get('/register', function(req, res)       //on get register request
   <input type="text" id="firstname" name="firstname"><br>
   <label for="lastname"> Last Name </label><br>
   <input type="text" id="lastname" name="lastname"><br>
+  <label for="age"> Age </label><br>
+  <input type="number" id="age" name="age"><br>
   <label for="gender"> Gender: </label><br>
   <input type="radio" name="gender" value="male" checked>Male<br>
   <input type="radio" style= "color: white" name="gender" value="female">Female<br><br>
@@ -230,6 +232,7 @@ app.post('/addMe', function(req, res)     //handling post request for register
         "gender":`${req.body.gender}`,
         "firstname":`${req.body.firstname}`,
         "lastname":`${req.body.lastname}`,
+        "age":`${req.body.age}`,
         "count":3,
         "totalWins":0,
         "totalLosses":0,
@@ -255,7 +258,7 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
   var loggedUser= null;
   userCollection.find({"username": `${req.body.username}`}).toArray().then(function(array)
   {
-    console.log(array);
+  //  console.log(array);
     for(var l=0; l<array.length; l++)
     {
       if(array[l].username == `${req.body.username}`)
@@ -263,7 +266,7 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
         loggedUser= array[l];
       }
     }
-  console.log(loggedUser);
+//  console.log(loggedUser);
   if(loggedUser == null)   //username doesnt exist.
   {
     //send them back to login.
@@ -288,7 +291,16 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
     }
     if(loggedUser.password == `${req.body.password}`)
     {
+      console.log("in here");
+      console.log(loggedUser);
+
       //4) attach session_id
+
+      //Update count on succesfull login:
+      var newCount= 3;
+      userCollection.update({"username":`${req.body.username}`}, {$set:{"count":newCount}});
+      console.log("Changed count to 3.");
+      console.log(loggedUser);
       req.session.user= loggedUser;       //Attaching full user to session. Could also attach only username etc.
       res.redirect('/myStats');     //myStats will have this session.
     }

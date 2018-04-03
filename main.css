@@ -92,17 +92,12 @@ section {
 	animation-duration: 0.8s;
 }
 #registerSection {
-
     margin: 10px;
     padding: 10px;
     text-align: center;
     background-color: #262626;
-    width: 20%;
-    height: 50%;
-    position: fixed;
-    left: 40%;
-
-
+    width: auto;
+    height: auto;
 }
 #tutorial {
     position: fixed;
