@@ -18,7 +18,6 @@ var mongoClient= require('mongodb').MongoClient;
 var database;
 var userCollection;
 var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
-
 var currentPlayers= [];
 //create and keep track of running channels
 var rooms = new Object();
@@ -89,7 +88,6 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     }
   });
 });
-
 mongoClient.connect(url, function(error, client)
 {
   if(error)
@@ -235,7 +233,8 @@ app.post('/addMe', function(req, res)     //handling post request for register
         "count":3,
         "totalWins":0,
         "totalLosses":0,
-        "tictacMaster":0
+        "tictacMaster":0,
+        "totalGames":0
        }
       usernamesArray.push(`${req.body.username}`);
       userCollection.insert(userToAdd, function(err, result)
@@ -366,21 +365,71 @@ app.get('/myStats',isLoggedIn, function(req, res)
   var logout= `<a href="/logout"> Logout </a>`;
   var dash= currentUser.firstname;
 
-  var toServe= `<!DOCTYPE html>
+
+  var games= `${req.session.user.totalGames}`;
+  var wins= `${req.session.user.totalWins}`;
+  console.log(wins);
+  console.log(games);
+  if(games!=0)
+  {
+    var acc= (wins/(games))*100;
+  }
+  else
+  {
+    var acc= 0;
+  }
+  var head= `<!DOCTYPE html>
   <html>
   <head>
-  <script src='./jquery-3.3.1.min.js'></script>
-  <script src = 'stat.js'></script>
+  <title> My Stats </title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href='./main.css'>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script>
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "300px";
+  }
+
+  function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+  }
+</script>
   </head>
-   <body>
-   <button onclick = 'onJoinGameClicked()'> Join Game </button>
-   <a href= '/logout'> Logout </a>
+  <body>
+  <nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+  <div class="navbar-header">
+    <a class="navbar-brand" href="#"> Welcome, `+dash+`!</a>
+  </div>
+  <ul class="nav navbar-nav">
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+    <li><a class= 'glyphicons-log-out' href='/logout'> Logout </a></li>
+    <li><a class= 'glyphicons-gamepad' href='/game'> Play game </a></li>
+  </ul>
+  </div>
+  </nav>
+
+  <div id="mySidenav" class="sidenav">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <p>Total Wins: `+`${req.session.user.totalWins}`+`</p>
+  <p>Total Losses: `+`${req.session.user.totalLosses}`+` </p>
+  <p> Winning Accuracy: `+acc+`%</p>
+  <a href="#" data-toggle="popover" data-trigger="focus" data-content="Tic-tac master medals are the medals awarded to players after they win 10 games. Keep earning more to become a master.">Tic-Tac-Master Medals: `+`${req.session.user.tictacMaster}`+`</a>
+  </div>
+  <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; View Stats</span>
+  <script>
+  $(document).ready(function(){
+      $('[data-toggle="popover"]').popover();
+  });
+  </script>
    </body></html>`;
 
 //  var newHead= stats html;
 //var endNew= stats html';
   //var toServe= newHead+dash+endNew;
-  res.end(toServe);
+  res.end(head);
   //res.end(toServe);
 });
 app.get('/logout',isLoggedIn, function(req, res)

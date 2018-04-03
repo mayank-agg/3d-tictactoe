@@ -132,13 +132,13 @@ logoutBut.addEventListener('click', function()
 {
   location.href= '/logout';
 });
-socket.on('welcome', function(playerName, roomNum, numPlayers)
+socket.on('welcome', function(playerName, roomNum)
 {
   playername= playerName;
 //  if(numPlayers == 1)
   //{
     //  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are currently in room: "+roomNum+". The room is currently empty. Please wait.");
-    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. ");
+    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are in "+roomNum);
 //  }
 
 /*  else {
