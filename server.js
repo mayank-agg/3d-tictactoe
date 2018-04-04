@@ -327,6 +327,8 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
 app.get('/game',isLoggedIn, function(req, res, next)
 {
   playerName= req.session.user.firstname;
+  console.log(playerName);
+
 //  username= req.session.user.username;
   var gameHead= `<!DOCTYPE html>
 <html>
@@ -351,7 +353,7 @@ app.get('/game',isLoggedIn, function(req, res, next)
        </ul>
      </nav>
      <div id='header-container'>
-       <span id='game-header'>`+`${req.session.user.firstname}`+` vs Player 2</span>
+       <span id='game-header'>${req.session.user.firstname} vs Player 2</span>
        <span id='game-timer'>Time: 00:00</span>
      </div>
      <hr/>
@@ -406,6 +408,7 @@ app.get('/myStats',isLoggedIn, function(req, res)
   function closeNav() {
     document.getElementById("mySidenav").style.width = "0";
   }
+
 </script>
   </head>
   <body>
