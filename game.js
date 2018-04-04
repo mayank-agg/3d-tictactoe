@@ -7,7 +7,8 @@ var clickId = 'x';
 
 var mCells = new Object;
 window.onload = function(){
-  playerName
+
+  $('#waiting-message').show();
   var options1 = {
     width:50,
     height:50,
@@ -32,10 +33,10 @@ window.onload = function(){
     borderColor: 'blue',
     containerId: 'grid3'
   }
-  //socket.emit("JoinRoom",{name:pla});
-  /*createGrid(3,3,options1);
+
+  createGrid(3,3,options1);
   createGrid(3,3,options2);
-  createGrid(3,3,options3);*/
+  createGrid(3,3,options3);
 }
 
 function createGrid(cols,rows,options,margin){
@@ -134,18 +135,11 @@ logoutBut.addEventListener('click', function()
 {
   location.href= '/logout';
 });
-socket.on('welcome', function(playerName)
+socket.on('welcome', function(user)
 {
-  playername= playerName;
-//  if(numPlayers == 1)
-  //{
-    //  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are currently in room: "+roomNum+". The room is currently empty. Please wait.");
-    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe.");
-//  }
-
-/*  else {
-    alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe. You are currently in room: "+roomNum+". There are currently"+numPlayers+" players. ");
-  }*/
+  playerName = user.username;
+  alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe.");
+  socket.emit("JoinRoom",user);
 });
 socket.on('newMove', function(clickId,col,row,grid)
 {
@@ -180,6 +174,17 @@ socket.on('message', function(message)
 {
   printMessage(message);
 });
+
+socket.on("RoomStatus",function(code){
+  console.log("room status:" + code);
+  if(code == 0){
+    $("#waiting-message").hide();
+    $("#game-body").show();
+  }else{
+    $("#waiting-message").show();
+  }
+});
+
 function printMessage(message) {
     var p = document.createElement("p");
     console.log(message);

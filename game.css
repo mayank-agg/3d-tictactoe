@@ -29,9 +29,17 @@
   margin: 5px;
 }
 
+#game-body{
+  display: none;
+}
+#waiting-message{
+  display: none;
+}
+
 body{
   background-color: #000;
 }
+
 
 nav{
   width:100%;

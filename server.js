@@ -5,6 +5,7 @@ var flash= require('express-flash');
 var app= express();
 app.use(flash());
 var port= 33108;
+var mUser;
 
 var server= http.createServer(app).listen(port);
 var io= require('socket.io')(server);
@@ -23,28 +24,32 @@ var currentPlayers= [];
 var rooms = new Object();
 var numOfRooms = 0;
 function addUserToNewRoom(user){
-  rooms[numOfRooms] = new Array();
-  rooms[numOfRooms].push(user);
+  rooms["room"+numOfRooms] = new Array();
+  rooms["room"+numOfRooms].push(user);
+  console.log(rooms["room"+numOfRooms][0].username);
   numOfRooms++;
 }
 function joinRoom(user,socket){
   if(numOfRooms == 0){
     addUserToNewRoom(user);
     socket.join("room"+numOfRooms);
-    return false;
+    user.room = "room" + numOfRooms;
+    return [user,false];
   }else{
-    var pendingRoom = room + '' + numOfRooms - 1;
+    var pendingRoom = "room" + '' + (numOfRooms - 1);
     if(rooms[pendingRoom].length < 2){
       rooms[pendingRoom].push(user);
       socket.join(pendingRoom);
-      return true;
+      user.room = pendingRoom;
+      console.log(rooms[pendingRoom][1].username);
+      return [user,true];
     }else{
       addUserToNewRoom(user);
       socket.join("room"+numOfRooms);
-      return false;
+      user.room = "room"+numOfRooms;
+      return [user,false];
     }
   }
-  console.log(rooms);
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
@@ -60,7 +65,8 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     socket.join("room"+roomNum);
   }*/
 //  socket.emit('welcome', playerName, roomNum, numClients);
-  socket.emit('welcome',playerName);
+
+  socket.emit('welcome',mUser);
 //  io.sockets.in("room"+roomNum).emit('playerJoined', playerName);
   socket.broadcast.emit('playerJoined', playerName);      //Will be listened at client.
   socket.on('madeMove', function(clickId,col,row,grid)        //emitted by client when he makes a move. Second arg is 'x' or 'o'
@@ -81,10 +87,11 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   });
 
   socket.on('JoinRoom',function(user){
-    if(joinRoom(user)){
-      //direct to game page as we have 2 players in one room
+    if(joinRoom(user,socket)[1] == true){
+      socket.emit("RoomStatus",0);
+      socket.broadcast.emit("RoomStatus",0);
     }else{
-      //redirect to stats page saying that we are waiting for another player to join room
+      socket.broadcast.emit("RoomStatus",-1);
     }
   });
 });
@@ -301,7 +308,8 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
       userCollection.update({"username":`${req.body.username}`}, {$set:{"count":newCount}});
       console.log("Changed count to 3.");
       console.log(loggedUser);
-      req.session.user= loggedUser;       //Attaching full user to session. Could also attach only username etc.
+      req.session.user= loggedUser;
+            //Attaching full user to session. Could also attach only username etc.
       res.redirect('/myStats');     //myStats will have this session.
     }
     else    //password doesnt match.
@@ -327,7 +335,7 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
 app.get('/game',isLoggedIn, function(req, res, next)
 {
   playerName= req.session.user.firstname;
-  console.log(playerName);
+  mUser = req.session.user;
 
 //  username= req.session.user.username;
   var gameHead= `<!DOCTYPE html>
@@ -352,18 +360,23 @@ app.get('/game',isLoggedIn, function(req, res, next)
        </li>
        </ul>
      </nav>
-     <div id='header-container'>
-       <span id='game-header'>${req.session.user.firstname} vs Player 2</span>
-       <span id='game-timer'>Time: 00:00</span>
+     <div id="waiting-message">
+      Waiting For Player2...
      </div>
-     <hr/>
-     <div id='grid-container'>
-       <div id = 'smart-overlay'></div>
-     </div>
-     <div id="box" class="messages"><p id="title"> Chat Box </p><hr>
-     <form id= "messageForm" action="javascript:void(0)">
-         <input size= "35" placeholder= "Write Here" type="text" id="message" required autofocus />
-     </form>
+     <div id="game-body">
+      <div id='header-container'>
+        <span id='game-header'>${req.session.user.firstname} vs Player 2</span>
+        <span id='game-timer'>Time: 00:00</span>
+        </div>
+        <hr/>
+        <div id='grid-container'>
+        <div id = 'smart-overlay'></div>
+        </div>
+        <div id="box" class="messages"><p id="title"> Chat Box </p><hr>
+        <form id= "messageForm" action="javascript:void(0)">
+          <input size= "35" placeholder= "Write Here" type="text" id="message" required autofocus />
+          </form>
+        </div>
      </div>
    </body>
    <script src='./game.js'></script>
