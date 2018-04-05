@@ -28,15 +28,13 @@ function addUserToNewRoom(user){
   user.room = "room"+numOfRooms;
   user.moveSymbol = 'x';
   rooms["room"+numOfRooms].push(user);
-  console.log(user.room);
   numOfRooms++;
-  return user;
 }
 function joinRoom(user,socket){
   if(numOfRooms == 0){
-    var mUser = addUserToNewRoom(user);
+    addUserToNewRoom(user);
     socket.join("room"+(numOfRooms-1));
-    return [mUser,false];
+    return [user,false];
   }else{
     var pendingRoom = "room" + '' + (numOfRooms - 1);
     if(rooms[pendingRoom].length < 2){
@@ -47,47 +45,35 @@ function joinRoom(user,socket){
       console.log(user.room);
       return [user,true];
     }else{
-      var mUser = addUserToNewRoom(user);
+      addUserToNewRoom(user);
       socket.join("room"+(numOfRooms-1));
-      return [mUser,false];
+      return [user,false];
     }
   }
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
 {
-/*  var numClients= io.sockets.clients("room"+roomNum).length;
-  if(numClients <2)
-  {
-    socket.join("room"+roomNum);
-  }
-  else
-  {
-    roomNum= roomNum+1;
-    socket.join("room"+roomNum);
-  }*/
-//  socket.emit('welcome', playerName, roomNum, numClients);
-
   socket.emit('welcome',mUser);
-//  io.sockets.in("room"+roomNum).emit('playerJoined', playerName);
-  //socket.broadcast.emit('playerJoined', playerName);      //Will be listened at client.
-  socket.on('madeMove', function(clickId,col,row,grid,room)        //emitted by client when he makes a move. Second arg is 'x' or 'o'
+  socket.on('madeMove', function(clickId,col,row,grid,room,username)
   {
-    //socket.emit('newMove', moveType, locationGrid);
-    //socket.broadcast.emit('newMove', clickId,col,row,grid);
-    socket.to(room).emit('newMove', clickId, col, row, grid);
-//  io.sockets.in("room"+roomNum).emit('newMove', clickId,col,row,grid);
+    var symbol = 'x';
+    if(rooms[room][1].username == username){
+      symbol = 'o';
+    }
+    if(!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol){
+      socket.emit('newMove',symbol, col, row, grid);
+      socket.to(room).emit('newMove', symbol, col, row, grid);
+      rooms[room].lastKnownSymbol = symbol;
+    }
   });
   socket.on('disconnect', function(room)
   {
-     //socket.broadcast.emit('playerLeft');
-  //  socket.to(room).emit('playerLeft');
-  //  io.sockets.in("room"+roomNum).emit('playerLeft');
+    //disconnect event
   });
   socket.on('chat', function(message, room){
     socket.to(room).emit('message',message);
     console.log(room);
-    //io.sockets.in("room"+roomNum).emit('message', message);
   });
 
   socket.on('JoinRoom',function(user){
@@ -97,7 +83,6 @@ io.on('connection', function(socket)        //callback that has default arg: soc
       socket.emit("RoomStatus",0,joinData[0]);
       socket.to(joinData[0].room).emit("RoomStatus",0,joinData[0]);
     }else{
-      //console.log("-1: "+user);
       socket.to(joinData[0].room).emit("RoomStatus",-1,joinData[0]);
     }
     socket.to(joinData[0].room).emit("playerJoined",user.username);

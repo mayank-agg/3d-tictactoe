@@ -1,8 +1,8 @@
 var socket= io("http://localhost:33108");
 var playername;
 var userObj;
-var clickId = 'x';
-var lastMoveMade = null;
+var clickId;
+
 
 var mCells = new Object;
 window.onload = function(){
@@ -85,7 +85,7 @@ function createGrid(cols,rows,options,margin){
       if(i == rows - 1){
         button.style.borderBottomWidth = '0px';
       }
-      button.innerText = 'o';
+      button.innerText = 'n';
       button.setAttribute('onclick','onButtonClick()');
       container.appendChild(button);
       mCells[button.id] = button;
@@ -99,24 +99,19 @@ function createGrid(cols,rows,options,margin){
 }
 
 function onButtonClick(){
-
-  if(clickId != lastMoveMade || lastMoveMade == null){
+  if(event.target.innerHTML == 'n'){
     var cell = event.target;
-    cell.style.color = 'blue';
+    /*cell.style.color = 'blue';
     cell.style.fontWeight = 'bold';
-    cell.innerText = clickId;
+    cell.innerText = clickId;*/
 
     //example usage of getting cell col row and grid
     var col = getCellCol(cell.id);
     var row = getCellRow(cell.id);
     var grid = getcellGridNumber(cell.id);
-    lastMoveMade = clickId;
-
-    socket.emit('madeMove', clickId,col,row,grid,userObj.room);
-  }else{
-    alert("go away!!");
+    console.log(userObj);
+    socket.emit('madeMove', clickId,col,row,grid,userObj.room,$('#username').text());
   }
-  console.log(clickId +","+lastMoveMade);
 }
 
 function getCellCol(id){
@@ -147,7 +142,7 @@ socket.on('welcome', function(user)
   alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe.");
   socket.emit("JoinRoom",user);
 });
-socket.on('newMove', function(clickId,col,row,grid)
+socket.on('newMove', function(symbol,col,row,grid)
 {
 
   col= col.toString();
@@ -158,8 +153,7 @@ socket.on('newMove', function(clickId,col,row,grid)
   var myCell= document.getElementById(makeID);
   myCell.style.color = 'blue';
   myCell.style.fontWeight = 'bold';
-  myCell.innerText = clickId;
-  lastMoveMade = clickId;
+  myCell.innerText = symbol;
 });
 socket.on('playerJoined', function(playerName)
 {
@@ -184,9 +178,9 @@ socket.on('message', function(message)
 
 socket.on("RoomStatus",function(code,user){
   userObj = user;
-  if(document.getElementById('username').innerText == user.username){
+  /*if(document.getElementById('username').innerText == user.username){
     clickId = user.moveSymbol;
-  }
+  }*/
   if(code == 0){
     $("#waiting-message").hide();
     $("#game-body").show();
