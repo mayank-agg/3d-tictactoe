@@ -134,9 +134,12 @@ logoutBut.addEventListener('click', function()
 //  socket.close();
 //  socket.close();  //will emit disconnect event.
 });
-logoutBut.addEventListener('click', function()
+var quitBut= document.getElementById('quit');
+console.log(quitBut);
+quitBut.addEventListener('click', function()
 {
-  location.href= '/logout';
+  socket.emit('gameQuit', userObj.room);
+  location.href= '/myStats';
 });
 socket.on('welcome', function(user)
 {
