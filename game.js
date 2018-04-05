@@ -1,8 +1,6 @@
 var socket= io("http://localhost:33108");
 var playername;
-var clientName;
-clientName= prompt("What would you like to be called?");
-
+var userObj;
 var clickId = 'x';
 
 var mCells = new Object;
@@ -111,7 +109,7 @@ function onButtonClick(){
   var row = getCellRow(cell.id);
   var grid = getcellGridNumber(cell.id);
 
-  socket.emit('madeMove', clickId,col,row,grid);
+  socket.emit('madeMove', clickId,col,row,grid,userObj.room);
 }
 
 function getCellCol(id){
@@ -164,10 +162,9 @@ socket.on('playerLeft', function(playerName)
 
 document.forms[0].onsubmit = function () {
     var input = document.getElementById("message");
-		var msg = clientName+": " + input.value;
+		var msg = playerName+": " + input.value;
     printMessage(msg);
-    console.log(msg);
-    socket.emit('chat',msg);
+    socket.emit('chat',msg,userObj.room);
     input.value = '';
 };
 socket.on('message', function(message)
@@ -175,8 +172,9 @@ socket.on('message', function(message)
   printMessage(message);
 });
 
-socket.on("RoomStatus",function(code){
-  console.log("room status:" + code);
+socket.on("RoomStatus",function(code,user){
+  console.log(user);
+  userObj = user;
   if(code == 0){
     $("#waiting-message").hide();
     $("#game-body").show();

@@ -25,29 +25,29 @@ var rooms = new Object();
 var numOfRooms = 0;
 function addUserToNewRoom(user){
   rooms["room"+numOfRooms] = new Array();
+  user.room = "room"+numOfRooms;
   rooms["room"+numOfRooms].push(user);
-  console.log(rooms["room"+numOfRooms][0].username);
+  console.log(user.room);
   numOfRooms++;
+  return user;
 }
 function joinRoom(user,socket){
   if(numOfRooms == 0){
-    addUserToNewRoom(user);
-    socket.join("room"+numOfRooms);
-    user.room = "room" + numOfRooms;
-    return [user,false];
+    var mUser = addUserToNewRoom(user);
+    socket.join("room"+(numOfRooms-1));
+    return [mUser,false];
   }else{
     var pendingRoom = "room" + '' + (numOfRooms - 1);
     if(rooms[pendingRoom].length < 2){
-      rooms[pendingRoom].push(user);
       socket.join(pendingRoom);
       user.room = pendingRoom;
-      console.log(rooms[pendingRoom][1].username);
+      rooms[pendingRoom].push(user);
+      console.log(user.room);
       return [user,true];
     }else{
-      addUserToNewRoom(user);
-      socket.join("room"+numOfRooms);
-      user.room = "room"+numOfRooms;
-      return [user,false];
+      var mUser = addUserToNewRoom(user);
+      socket.join("room"+(numOfRooms-1));
+      return [mUser,false];
     }
   }
 }
@@ -68,31 +68,38 @@ io.on('connection', function(socket)        //callback that has default arg: soc
 
   socket.emit('welcome',mUser);
 //  io.sockets.in("room"+roomNum).emit('playerJoined', playerName);
-  socket.broadcast.emit('playerJoined', playerName);      //Will be listened at client.
-  socket.on('madeMove', function(clickId,col,row,grid)        //emitted by client when he makes a move. Second arg is 'x' or 'o'
+  //socket.broadcast.emit('playerJoined', playerName);      //Will be listened at client.
+  socket.on('madeMove', function(clickId,col,row,grid,room)        //emitted by client when he makes a move. Second arg is 'x' or 'o'
   {
     //socket.emit('newMove', moveType, locationGrid);
-    socket.broadcast.emit('newMove', clickId,col,row,grid);
+    //socket.broadcast.emit('newMove', clickId,col,row,grid);
+    socket.to(room).emit('newMove', clickId, col, row, grid);
 //  io.sockets.in("room"+roomNum).emit('newMove', clickId,col,row,grid);
   });
-  socket.on('disconnect', function()
+  socket.on('disconnect', function(room)
   {
-      socket.broadcast.emit('playerLeft');
-
+     //socket.broadcast.emit('playerLeft');
+  //  socket.to(room).emit('playerLeft');
   //  io.sockets.in("room"+roomNum).emit('playerLeft');
   });
-  socket.on('chat', function(message){
-    socket.broadcast.emit('message',message);
+  socket.on('chat', function(message, room){
+    socket.to(room).emit('message',message);
+    console.log(room);
     //io.sockets.in("room"+roomNum).emit('message', message);
   });
 
   socket.on('JoinRoom',function(user){
-    if(joinRoom(user,socket)[1] == true){
+    var joinData = joinRoom(user,socket);
+    console.log();
+    if(joinData[1] == true){
       socket.emit("RoomStatus",0);
-      socket.broadcast.emit("RoomStatus",0);
+      socket.to(joinData[0].room).emit("RoomStatus",0,joinRoom[0]);
     }else{
-      socket.broadcast.emit("RoomStatus",-1);
+      //console.log("-1: "+user);
+      console.log("jjj::"+joinData[0].room);
+      socket.to(joinData[0].room).emit("RoomStatus",-1,joinData[0]);
     }
+    socket.to(joinData[0].room).emit("playerJoined",user.username);
   });
 });
 mongoClient.connect(url, function(error, client)
@@ -139,7 +146,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(session({
   name: "session",
   secret: "players",
-  maxAge: 1000*60*(10)     //10 MINUTES OF SESSION TIME.
+  maxAge: 1000*60*(1000)     //10 MINUTES OF SESSION TIME.
 }));
 
 function isLoggedIn(req, res, next)     //middleware
