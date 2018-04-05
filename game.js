@@ -129,13 +129,14 @@ function getcellGridNumber(id){
 var logoutBut= document.getElementById('logout-btn');
 logoutBut.addEventListener('click', function()
 {
-  console.log(userObj.room);
   socket.emit('disconnectMe',userObj.room);
 //  socket.close();
-//  socket.close();  //will emit disconnect event.
+});
+logoutBut.addEventListener('click', function()
+{
+  location.href= '/logout';
 });
 var quitBut= document.getElementById('quit');
-console.log(quitBut);
 quitBut.addEventListener('click', function()
 {
   socket.emit('gameQuit', userObj.room);
