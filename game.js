@@ -2,6 +2,7 @@ var socket= io("http://localhost:33108");
 var playername;
 var userObj;
 var clickId = 'x';
+var lastMoveMade = null;
 
 var mCells = new Object;
 window.onload = function(){
@@ -99,17 +100,23 @@ function createGrid(cols,rows,options,margin){
 
 function onButtonClick(){
 
-  var cell = event.target;
-  cell.style.color = 'blue';
-  cell.style.fontWeight = 'bold';
-  cell.innerText = clickId;
+  if(clickId != lastMoveMade || lastMoveMade == null){
+    var cell = event.target;
+    cell.style.color = 'blue';
+    cell.style.fontWeight = 'bold';
+    cell.innerText = clickId;
 
-  //example usage of getting cell col row and grid
-  var col = getCellCol(cell.id);
-  var row = getCellRow(cell.id);
-  var grid = getcellGridNumber(cell.id);
+    //example usage of getting cell col row and grid
+    var col = getCellCol(cell.id);
+    var row = getCellRow(cell.id);
+    var grid = getcellGridNumber(cell.id);
+    lastMoveMade = clickId;
 
-  socket.emit('madeMove', clickId,col,row,grid,userObj.room);
+    socket.emit('madeMove', clickId,col,row,grid,userObj.room);
+  }else{
+    alert("go away!!");
+  }
+  console.log(clickId +","+lastMoveMade);
 }
 
 function getCellCol(id){
@@ -136,11 +143,13 @@ logoutBut.addEventListener('click', function()
 socket.on('welcome', function(user)
 {
   playerName = user.username;
+
   alert("Hello "+playerName+", Welcome to 3D Tic-tac-toe.");
   socket.emit("JoinRoom",user);
 });
 socket.on('newMove', function(clickId,col,row,grid)
 {
+
   col= col.toString();
   row= row.toString();
   var makeID= row+col+grid;
@@ -150,6 +159,7 @@ socket.on('newMove', function(clickId,col,row,grid)
   myCell.style.color = 'blue';
   myCell.style.fontWeight = 'bold';
   myCell.innerText = clickId;
+  lastMoveMade = clickId;
 });
 socket.on('playerJoined', function(playerName)
 {
@@ -173,8 +183,10 @@ socket.on('message', function(message)
 });
 
 socket.on("RoomStatus",function(code,user){
-  console.log(user);
   userObj = user;
+  if(document.getElementById('username').innerText == user.username){
+    clickId = user.moveSymbol;
+  }
   if(code == 0){
     $("#waiting-message").hide();
     $("#game-body").show();

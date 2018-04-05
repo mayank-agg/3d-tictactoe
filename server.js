@@ -26,6 +26,7 @@ var numOfRooms = 0;
 function addUserToNewRoom(user){
   rooms["room"+numOfRooms] = new Array();
   user.room = "room"+numOfRooms;
+  user.moveSymbol = 'x';
   rooms["room"+numOfRooms].push(user);
   console.log(user.room);
   numOfRooms++;
@@ -41,6 +42,7 @@ function joinRoom(user,socket){
     if(rooms[pendingRoom].length < 2){
       socket.join(pendingRoom);
       user.room = pendingRoom;
+      user.moveSymbol = 'o';
       rooms[pendingRoom].push(user);
       console.log(user.room);
       return [user,true];
@@ -92,11 +94,10 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     var joinData = joinRoom(user,socket);
     console.log();
     if(joinData[1] == true){
-      socket.emit("RoomStatus",0);
-      socket.to(joinData[0].room).emit("RoomStatus",0,joinRoom[0]);
+      socket.emit("RoomStatus",0,joinData[0]);
+      socket.to(joinData[0].room).emit("RoomStatus",0,joinData[0]);
     }else{
       //console.log("-1: "+user);
-      console.log("jjj::"+joinData[0].room);
       socket.to(joinData[0].room).emit("RoomStatus",-1,joinData[0]);
     }
     socket.to(joinData[0].room).emit("playerJoined",user.username);
@@ -372,7 +373,7 @@ app.get('/game',isLoggedIn, function(req, res, next)
      </div>
      <div id="game-body">
       <div id='header-container'>
-        <span id='game-header'>${req.session.user.firstname} vs Player 2</span>
+        <span id='game-header'><span id="firstname">${req.session.user.firstname}(</span><span id="username">${req.session.user.username}</span>)</span>
         <span id='game-timer'>Time: 00:00</span>
         </div>
         <hr/>
