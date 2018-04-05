@@ -67,9 +67,13 @@ io.on('connection', function(socket)        //callback that has default arg: soc
       rooms[room].lastKnownSymbol = symbol;
     }
   });
-  socket.on('disconnect', function(room)
+  socket.on('disconnectMe', function(room)      //clicked Logout
   {
     //disconnect event
+    //socket.to(room).emit('playerLeft', room);
+    console.log(room);
+    socket.to(room).emit('playerLeft');
+    socket.disconnect();
   });
   socket.on('chat', function(message, room){
     socket.to(room).emit('message',message);
@@ -358,8 +362,8 @@ app.get('/game',isLoggedIn, function(req, res, next)
      </div>
      <div id="game-body">
       <div id='header-container'>
-        <span id='game-header'><span id="firstname">${req.session.user.firstname}(</span><span id="username">${req.session.user.username}</span>)</span>
-        <span id='game-timer'>Time: 00:00</span>
+        <span id='game-header'><span id="firstname">${req.session.user.firstname}</span> (<span id="username">${req.session.user.username}</span>)</span>
+        <span id='game-timer'></span>
         </div>
         <hr/>
         <div id='grid-container'>
