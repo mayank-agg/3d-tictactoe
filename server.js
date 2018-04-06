@@ -59,6 +59,8 @@ function didWinOnLocalGrid(bitmap,move){
   var winPosCol = new Array(3);
   var winPosRow = new Array(3);
   var rowCount = 0;
+  var colCount = 0;
+
   for(var i=0;i<3;i++){
     //row wins
     winPosRow[move.col] = move;
@@ -75,7 +77,21 @@ function didWinOnLocalGrid(bitmap,move){
       }
     }
   }
-  return "test";
+  for(var i=0;i<3;i++){
+    winPosCol[move.row] = move;
+    if(i != move.row){
+      if(bitmap[(i*3 + move.col) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
+        return false;
+      }else{
+        var pos = {col:move.col,row:i,grid:move.grid};
+        winPosCol[i] = pos;
+        colCount++;
+        if(colCount >= 2){
+          return winPosCol;
+        }
+      }
+    }
+  }
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
