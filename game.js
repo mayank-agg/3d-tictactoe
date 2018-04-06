@@ -109,7 +109,7 @@ function onButtonClick(){
     var col = getCellCol(cell.id);
     var row = getCellRow(cell.id);
     var grid = getcellGridNumber(cell.id);
-    console.log(userObj);
+    console.log(col + ',' + row + ',' + grid.charAt(grid.length-1));
     socket.emit('madeMove', clickId,col,row,grid,userObj.room,$('#username').text());
   }
 }

@@ -42,6 +42,11 @@ function joinRoom(user,socket){
       user.room = pendingRoom;
       user.moveSymbol = 'o';
       rooms[pendingRoom].push(user);
+      //create bitmap for each room
+      var bitmap = new Array(27);
+      bitmap.fill(0);
+      rooms[pendingRoom].bitMap = bitmap;
+
       console.log(user.room);
       return [user,true];
     }else{
@@ -50,6 +55,26 @@ function joinRoom(user,socket){
       return [user,false];
     }
   }
+}
+
+function didWinOnLocalGrid(bitmap,move){
+  var winPos = new Array(3);
+  for(var i=0;i<3;i++){
+    winPos[move.col] = move;
+    if(i != move.col){
+      if(bimap[i,move.row] != 1){
+        return false;
+      }else{
+
+      }
+    }
+    if(i != move.row){
+      if(bitmap[move.row,i] != 1){
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
@@ -65,6 +90,7 @@ io.on('connection', function(socket)        //callback that has default arg: soc
       socket.emit('newMove',symbol, col, row, grid);
       socket.to(room).emit('newMove', symbol, col, row, grid);
       rooms[room].lastKnownSymbol = symbol;
+      rooms[room].bitMap[(row*3 + col)+(9*(grid.charAt(grid.length-1)-1))] = 1;
     }
   });
   socket.on('disconnect', function(room)
@@ -78,7 +104,6 @@ io.on('connection', function(socket)        //callback that has default arg: soc
 
   socket.on('JoinRoom',function(user){
     var joinData = joinRoom(user,socket);
-    console.log();
     if(joinData[1] == true){
       socket.emit("RoomStatus",0,joinData[0]);
       socket.to(joinData[0].room).emit("RoomStatus",0,joinData[0]);
@@ -388,8 +413,6 @@ app.get('/myStats',isLoggedIn, function(req, res)
 
   var games= `${req.session.user.totalGames}`;
   var wins= `${req.session.user.totalWins}`;
-  console.log(wins);
-  console.log(games);
   if(games!=0)
   {
     var acc= (wins/(games))*100;
