@@ -46,8 +46,6 @@ function joinRoom(user,socket){
       var bitmap = new Array(27);
       bitmap.fill(0);
       rooms[pendingRoom].bitMap = bitmap;
-
-      console.log(user.room);
       return [user,true];
     }else{
       addUserToNewRoom(user);
@@ -58,23 +56,26 @@ function joinRoom(user,socket){
 }
 
 function didWinOnLocalGrid(bitmap,move){
-  var winPos = new Array(3);
+  var winPosCol = new Array(3);
+  var winPosRow = new Array(3);
+  var rowCount = 0;
   for(var i=0;i<3;i++){
-    winPos[move.col] = move;
+    //row wins
+    winPosRow[move.col] = move;
     if(i != move.col){
-      if(bimap[i,move.row] != 1){
+      if(bitmap[(move.row*3 + i) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
         return false;
       }else{
-
-      }
-    }
-    if(i != move.row){
-      if(bitmap[move.row,i] != 1){
-        return false;
+        var pos = {col:i,row:move.row,grid:move.grid}
+        winPosRow[i] = pos;
+        rowCount++;
+        if(rowCount >= 2){
+          return winPosRow;
+        }
       }
     }
   }
-  return true;
+  return false;
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
@@ -83,14 +84,18 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   socket.on('madeMove', function(clickId,col,row,grid,room,username)
   {
     var symbol = 'x';
+    var bitcode = 1;
     if(rooms[room][1].username == username){
       symbol = 'o';
+      bitcode = 2;
     }
     if(!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol){
       socket.emit('newMove',symbol, col, row, grid);
       socket.to(room).emit('newMove', symbol, col, row, grid);
       rooms[room].lastKnownSymbol = symbol;
-      rooms[room].bitMap[(row*3 + col)+(9*(grid.charAt(grid.length-1)-1))] = 1;
+      rooms[room].bitMap[(row*3 + col)+(9*(grid.charAt(grid.length-1)-1))] = bitcode;
+      var move = {col:col,row:row,grid:grid.charAt(grid.length-1),bitcode:bitcode};
+      console.log(didWinOnLocalGrid(rooms[room].bitMap,move));
     }
   });
   socket.on('disconnectMe', function(room)      //clicked Logout
