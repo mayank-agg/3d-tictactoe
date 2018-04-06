@@ -93,10 +93,16 @@ io.on('connection', function(socket)        //callback that has default arg: soc
       rooms[room].bitMap[(row*3 + col)+(9*(grid.charAt(grid.length-1)-1))] = 1;
     }
   });
-  socket.on('disconnect', function(room)
+  socket.on('disconnectMe', function(room)      //clicked Logout
   {
-    //disconnect event
+    socket.to(room).emit('playerLeft');
+    socket.disconnect();
   });
+  socket.on('gameQuit', function(room)      //clicked Logout
+  {
+    socket.to(room).emit('playerLeft');
+  });
+
   socket.on('chat', function(message, room){
     socket.to(room).emit('message',message);
     console.log(room);
@@ -375,6 +381,10 @@ app.get('/game',isLoggedIn, function(req, res, next)
            <span class="glyphicon glyphicon-log-out"></span>
            <span id='logout-text'>Log out</span>
          </button>
+         <button id='quit'>
+           <span class="glyphicon glyphicon-home"></span>
+           <span>Quit</span>
+         </button>
        </li>
        </ul>
      </nav>
@@ -383,8 +393,8 @@ app.get('/game',isLoggedIn, function(req, res, next)
      </div>
      <div id="game-body">
       <div id='header-container'>
-        <span id='game-header'><span id="firstname">${req.session.user.firstname}(</span><span id="username">${req.session.user.username}</span>)</span>
-        <span id='game-timer'>Time: 00:00</span>
+        <span id='game-header'><span id="firstname">${req.session.user.firstname}</span> (<span id="username">${req.session.user.username}</span>)</span>
+        <span id='game-timer'></span>
         </div>
         <hr/>
         <div id='grid-container'>

@@ -2,7 +2,7 @@ var socket= io("http://localhost:33108");
 var playername;
 var userObj;
 var clickId;
-
+var myTimer;
 
 var mCells = new Object;
 window.onload = function(){
@@ -129,11 +129,18 @@ function getcellGridNumber(id){
 var logoutBut= document.getElementById('logout-btn');
 logoutBut.addEventListener('click', function()
 {
-  socket.close();  //will emit disconnect event.
+  socket.emit('disconnectMe',userObj.room);
+//  socket.close();
 });
 logoutBut.addEventListener('click', function()
 {
   location.href= '/logout';
+});
+var quitBut= document.getElementById('quit');
+quitBut.addEventListener('click', function()
+{
+  socket.emit('gameQuit', userObj.room);
+  location.href= '/myStats';
 });
 socket.on('welcome', function(user)
 {
@@ -159,9 +166,10 @@ socket.on('playerJoined', function(playerName)
 {
   alert(playerName+" joined!");
 });
-socket.on('playerLeft', function(playerName)
+socket.on('playerLeft', function()
 {
-  alert("Someone left!");
+  clearInterval(myTimer);
+  alert("Other player left!");
 });
 
 document.forms[0].onsubmit = function () {
@@ -176,6 +184,76 @@ socket.on('message', function(message)
   printMessage(message);
 });
 
+var second=0;
+var minute=0;
+var hour=0;
+var timer= document.getElementById('game-timer');
+function startTimer()
+{
+  second++;
+
+  if(second>=60)
+  {
+    second=0;
+    minute++;
+    if(minute >=60)
+    {
+      minute=0;
+      hour++;
+    }
+  }
+  if(second < 10)
+  {
+    if(minute < 10)
+    {
+      if(hour < 10)
+      {
+        timer.innerText= '0'+hour+":"+'0'+minute+':'+'0'+second;
+      }
+      else //second < 10, minute<10, hour>10.
+      {
+        timer.innerText= hour+":"+'0'+minute+':'+'0'+second;
+      }
+    }
+    else  //minute>10 && second<10.
+    {
+      if(hour>10)
+      {
+          timer.innerText= hour+":"+minute+':'+'0'+second;
+      }
+      else
+      {
+        timer.innerText= '0'+hour+":"+minute+':'+'0'+second;
+      }
+    }
+  }
+  else //Second > 10.
+  {
+    if(minute < 10)
+    {
+      if(hour < 10)
+      {
+        timer.innerText= '0'+hour+":"+'0'+minute+':'+second;
+      }
+      else //second > 10, minute<10, hour>10.
+      {
+        timer.innerText= hour+":"+'0'+minute+':'+second;
+      }
+    }
+    else  //minute>10 && second>10.
+    {
+      if(hour>10)
+      {
+        timer.innerText= hour+":"+minute+':'+second;
+      }
+      else
+      {
+        timer.innerText= '0'+hour+":"+minute+':'+second;
+      }
+    }
+  }
+}
+
 socket.on("RoomStatus",function(code,user){
   userObj = user;
   /*if(document.getElementById('username').innerText == user.username){
@@ -184,6 +262,8 @@ socket.on("RoomStatus",function(code,user){
   if(code == 0){
     $("#waiting-message").hide();
     $("#game-body").show();
+  //  console.log("starting the timer");
+     myTimer= setInterval(startTimer, 1000);        //starts the timer.
   }else{
     $("#waiting-message").show();
   }
