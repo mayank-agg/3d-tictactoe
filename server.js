@@ -64,7 +64,7 @@ function didWinOnLocalGrid(bitmap,move){
     winPosRow[move.col] = move;
     if(i != move.col){
       if(bitmap[(move.row*3 + i) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
-        return false;
+        break;
       }else{
         var pos = {col:i,row:move.row,grid:move.grid}
         winPosRow[i] = pos;
@@ -75,7 +75,7 @@ function didWinOnLocalGrid(bitmap,move){
       }
     }
   }
-  return false;
+  return "test";
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
