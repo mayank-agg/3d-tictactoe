@@ -109,7 +109,6 @@ function onButtonClick(){
     var col = getCellCol(cell.id);
     var row = getCellRow(cell.id);
     var grid = getcellGridNumber(cell.id);
-    console.log(col + ',' + row + ',' + grid.charAt(grid.length-1));
     socket.emit('madeMove', clickId,col,row,grid,userObj.room,$('#username').text());
   }
 }
@@ -139,7 +138,7 @@ logoutBut.addEventListener('click', function()
 var quitBut= document.getElementById('quit');
 quitBut.addEventListener('click', function()
 {
-  socket.emit('gameQuit', userObj.room);
+  socket.emit('gameQuit', userObj.room,$('#username').text());
   location.href= '/myStats';
 });
 socket.on('welcome', function(user)
@@ -166,10 +165,14 @@ socket.on('playerJoined', function(playerName)
 {
   alert(playerName+" joined!");
 });
-socket.on('playerLeft', function()
+socket.on("gameover",function(winner,loser,pos){
+
+});
+socket.on('playerLeft', function(username)
 {
   clearInterval(myTimer);
   alert("Other player left!");
+  $('#game-body').hide();
 });
 
 document.forms[0].onsubmit = function () {

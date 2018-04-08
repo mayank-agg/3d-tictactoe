@@ -42,6 +42,7 @@ function joinRoom(user,socket){
       user.room = pendingRoom;
       user.moveSymbol = 'o';
       rooms[pendingRoom].push(user);
+      rooms[pendingRoom].canPlay = true;
       //create bitmap for each room
       var bitmap = new Array(27);
       bitmap.fill(0);
@@ -55,11 +56,131 @@ function joinRoom(user,socket){
   }
 }
 
-function didWinOnLocalGrid(bitmap,move){
+function didPlayerWin(bitmap,move){
+  return didWinOn1DPlane(bitmap,move) || didWinOn3DPlane(bitmap,move);
+}
+
+function didWinOn3DPlane(bitmap,move){
+  var winPosStraight = new Array(3);
+  var winPosDiagonalLeft = new Array(3);
+  var winPosDiagonalRight = new Array(3);
+  var winDiagStraightCol = new Array(3);
+  var winDiagStraightRow = new Array(3);
+
+  var countStraight = 0;
+  var countDiagonalLeft = 0;
+  var countDiagonalRight = 0;
+  var countDiagRow = 0;
+  var countDiagCol = 0;
+
+  var gridNumber = move.grid.charAt(move.grid.length-1)-1;
+  //straight up wins
+  for(var i=0;i<3;i++){
+    winPosStraight[gridNumber] = move;
+    if(i != gridNumber){
+      if(bitmap[(move.row*3 + move.col) + (9*i)] != move.bitcode){
+        break;
+      }else{
+        var pos = {col:move.col,row:move.row,grid:"grid"+(i+1)};
+        winPosStraight[i] = pos;
+        countStraight++;
+        if(countStraight >= 2){
+          return winPosStraight;
+        }
+      }
+    }
+  }
+
+  //diagonal row wins
+  for(var i=0;i<3;i++){
+    winDiagStraightRow[move.col] = move;
+    if(i != gridNumber && i != move.col){
+      if(bitmap[(move.row*3 + i) + (9*i)] != move.bitcode){
+        break;
+      }else{
+        var pos = {col:i,row:move.row,grid:"grid"+(i+1)};
+        winDiagStraightRow[i] = pos;
+        countDiagRow++;
+        if(countDiagRow >= 2){
+            return winDiagStraightRow;
+        }
+      }
+    }
+  }
+
+  //diagonal column wins
+  for(var i=0;i<3;i++){
+    winDiagStraightCol[move.row] = move;
+    if(i != gridNumber && i !== move.row){
+      if(bitmap[(i*3 + move.col + (9*i))] != move.bitcode){
+        break;
+      }else{
+        var pos = {col:move.col,row:i,grid:"grid"+(i+1)};
+        winDiagStraightCol[i] = pos;
+        countDiagCol++;
+        if(countDiagCol >= 2){
+          return winDiagStraightCol;
+        }
+      }
+    }
+  }
+
+  // diagonal wins
+  var isDiagonalSol = move.row == 0 && move.col == 0 || move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2
+                      || move.row == 2 && move.col == 2 || move.row == 1 && move.col == 1;
+  if(isDiagonalSol){
+    if(move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2 || move.col == 1 && move.col == move.row){
+      var i = 0;
+      var j = 2;
+      while(i < 3 && j >= 0){
+        winPosDiagonalRight[gridNumber] = move;
+        if(i != move.col && j != move.row && j != gridNumber){
+          if(bitmap[(j*3 + i) + (9*j)] != move.bitcode){
+            return false;
+          }else{
+            var pos = {col:i,row:j,grid:"grid"+(j+1)};
+            winPosDiagonalRight[j] = pos;
+            countDiagonalRight++;
+            if(countDiagonalRight >= 2){
+              return winPosDiagonalRight;
+            }
+          }
+        }
+        i++;
+        j--;
+      }
+    }else if(move.row == move.col){
+      for(var i=0;i<3;i++){
+        winPosDiagonalLeft[move.row] = move;
+        if(i != move.row && i != gridNumber){
+          if(bitmap[(i*3 + i) + (9*i)] != move.bitcode){
+            return false;
+          }else{
+            var pos = {col:i,row:i,grid:"grid"+(i+1)};
+            winPosDiagonalLeft[i] = pos;
+            countDiagonalLeft++;
+            if(countDiagonalLeft >= 2){
+              return winPosDiagonalLeft;
+            }
+          }
+        }
+      }
+    }
+  }else{
+    return false;
+  }
+  return false;
+}
+
+function didWinOn1DPlane(bitmap,move){
   var winPosCol = new Array(3);
   var winPosRow = new Array(3);
+  var winPosDiagonalRight = new Array(3);
+  var winPosDiagonalLeft = new Array(3);
   var rowCount = 0;
   var colCount = 0;
+  var diagonalRightCount = 0;
+  var diagonalLeftCount = 0;
 
   for(var i=0;i<3;i++){
     //row wins
@@ -77,11 +198,12 @@ function didWinOnLocalGrid(bitmap,move){
       }
     }
   }
+  //col wins
   for(var i=0;i<3;i++){
     winPosCol[move.row] = move;
     if(i != move.row){
       if(bitmap[(i*3 + move.col) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
-        return false;
+        break;
       }else{
         var pos = {col:move.col,row:i,grid:move.grid};
         winPosCol[i] = pos;
@@ -92,6 +214,51 @@ function didWinOnLocalGrid(bitmap,move){
       }
     }
   }
+  // diagonal wins
+  var isDiagonalSol = move.row == 0 && move.col == 0 || move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2
+                      || move.row == 2 && move.col == 2 || move.row == 1 && move.col == 1;
+  if(isDiagonalSol){
+    if(move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2 || move.col == 1 && move.col == move.row){
+      var i = 0;
+      var j = 2;
+      while(i < 3 && j >= 0){
+        winPosDiagonalRight[move.col] = move;
+        if(i != move.col && j != move.row){
+          if(bitmap[(j*3 + i) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
+            return false;
+          }else{
+            var pos = {col:i,row:j,grid:move.grid};
+            winPosDiagonalRight[i] = pos;
+            diagonalRightCount++;
+            if(diagonalRightCount >= 2){
+              return winPosDiagonalRight;
+            }
+          }
+        }
+        i++;
+        j--;
+      }
+    }else if(move.row == move.col){
+      for(var i=0;i<3;i++){
+        winPosDiagonalLeft[move.row] = move;
+        if(i != move.row){
+          if(bitmap[(i*3 + i) + (9*(move.grid.charAt(move.grid.length-1)-1))] != move.bitcode){
+            return false;
+          }else{
+            var pos = {col:i,row:i,grid:move.grid};
+            winPosDiagonalLeft[i] = pos;
+            diagonalLeftCount++;
+            if(diagonalLeftCount >= 2){
+              return winPosDiagonalLeft;
+            }
+          }
+        }
+       }
+    }
+  }else{
+    return false;
+  }
+  return false;
 }
 
 io.on('connection', function(socket)        //callback that has default arg: socket (which just joined).
@@ -101,17 +268,27 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   {
     var symbol = 'x';
     var bitcode = 1;
+    var roomIndexOfWinner = 0;
+    var roomIndexOfLoser = 1;
     if(rooms[room][1].username == username){
       symbol = 'o';
       bitcode = 2;
+      roomIndexOfWinner = 1;
+      roomIndexOfLoser = 0;
     }
-    if(!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol){
+    if((!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol) && rooms[room].canPlay == true){
       socket.emit('newMove',symbol, col, row, grid);
       socket.to(room).emit('newMove', symbol, col, row, grid);
       rooms[room].lastKnownSymbol = symbol;
       rooms[room].bitMap[(row*3 + col)+(9*(grid.charAt(grid.length-1)-1))] = bitcode;
       var move = {col:col,row:row,grid:grid.charAt(grid.length-1),bitcode:bitcode};
-      console.log(didWinOnLocalGrid(rooms[room].bitMap,move));
+      var win = didPlayerWin(rooms[room].bitMap,move);
+      if(win != false){
+        rooms[room].canPlay = false;
+        var winner = rooms[room][roomIndexOfWinner];
+        var loser = rooms[room][roomIndexOfLoser];
+        socket.to(room).emit("gameover",winner,loser,win);
+      }
     }
   });
   socket.on('disconnectMe', function(room)      //clicked Logout
@@ -119,14 +296,14 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     socket.to(room).emit('playerLeft');
     socket.disconnect();
   });
-  socket.on('gameQuit', function(room)      //clicked Logout
+  socket.on('gameQuit', function(room,username)      //quit game
   {
-    socket.to(room).emit('playerLeft');
+    socket.to(room).emit('playerLeft',username);
+    delete rooms[room];
   });
 
   socket.on('chat', function(message, room){
     socket.to(room).emit('message',message);
-    console.log(room);
   });
 
   socket.on('JoinRoom',function(user){
