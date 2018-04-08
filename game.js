@@ -3,6 +3,7 @@ var playername;
 var userObj;
 var clickId;
 var myTimer;
+var totalMoves= 0;
 
 var mCells = new Object;
 window.onload = function(){
@@ -21,7 +22,7 @@ window.onload = function(){
     height:50,
     offset:5,
     cellColor: 'white',
-    borderColor: 'blue',
+    borderColor: 'black',
     containerId: 'grid2'
   }
   var options3 = {
@@ -29,7 +30,7 @@ window.onload = function(){
     height:50,
     offset:5,
     cellColor: 'white',
-    borderColor: 'blue',
+    borderColor: 'black',
     containerId: 'grid3'
   }
 
@@ -138,7 +139,10 @@ logoutBut.addEventListener('click', function()
 var quitBut= document.getElementById('quit');
 quitBut.addEventListener('click', function()
 {
-  socket.emit('gameQuit', userObj.room,$('#username').text());
+  socket.emit('gameQuit', userObj.room);
+});
+quitBut.addEventListener('click', function()
+{
   location.href= '/myStats';
 });
 socket.on('welcome', function(user)
@@ -150,7 +154,8 @@ socket.on('welcome', function(user)
 });
 socket.on('newMove', function(symbol,col,row,grid)
 {
-
+  totalMoves++;
+  console.log(totalMoves);
   col= col.toString();
   row= row.toString();
   var makeID= row+col+grid;
@@ -256,7 +261,10 @@ function startTimer()
     }
   }
 }
+var gameTimeHour;
+var gameTimeMin;
 
+var timeString;
 socket.on("RoomStatus",function(code,user){
   userObj = user;
   /*if(document.getElementById('username').innerText == user.username){
@@ -265,8 +273,12 @@ socket.on("RoomStatus",function(code,user){
   if(code == 0){
     $("#waiting-message").hide();
     $("#game-body").show();
-  //  console.log("starting the timer");
-     myTimer= setInterval(startTimer, 1000);        //starts the timer.
+    var currDate= new Date();
+    gameTimeHour= currDate.getHours();
+    gameTimeMin= currDate.getMinutes();
+    timeString= gameTimeHour.toString()+':'+gameTimeMin.toString();      //Stores the time the game was started.
+    console.log(timeString);
+    myTimer= setInterval(startTimer, 1000);        //starts the timer.
   }else{
     $("#waiting-message").show();
   }
