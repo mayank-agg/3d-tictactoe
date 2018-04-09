@@ -7,7 +7,7 @@ var totalMoves= 0;
 
 var mCells = new Object;
 window.onload = function(){
-
+  $('#displayStats').hide();
   $('#waiting-message').show();
   var options1 = {
     width:50,
@@ -170,13 +170,22 @@ socket.on('playerJoined', function(playerName)
 {
   alert(playerName+" joined!");
 });
-socket.on("gameover",function(winner,loser,pos){
+socket.on("gameover",function(winner,loser,pos, room){
 
+  clearInterval(myTimer);
+  socket.emit('gameOverStats', winner, loser, pos,room, timeString, totalMoves, timer.innerText);      //initialize everything
+  alert(winner.firstname+' won!');
+  $('#game-body').hide();
+  $('#displayStats').show();
 });
-socket.on('playerLeft', function(username)
+/*socket.on('displayStats', winner, loser, pos, room, timeString)
+{
+
+}*/
+socket.on('playerLeft', function()
 {
   clearInterval(myTimer);
-  alert("Other player left!");
+  alert('Other player left!');
   $('#game-body').hide();
 });
 

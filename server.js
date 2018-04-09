@@ -23,6 +23,27 @@ var currentPlayers= [];
 //create and keep track of running channels
 var rooms = new Object();
 var numOfRooms = 0;
+
+var displayWinner;
+var displayLoser;
+var displayTime;
+var displayNumberOfMoves;
+var displayGameLasted;
+
+mongoClient.connect(url, function(error, client)
+{
+  if(error)
+  {
+    console.log(error);
+  }
+  else
+  {
+    database= client.db('assignment4');   //use this db.
+    userCollection= database.collection('userCollection');    //create user collection.
+    console.log("Connected to database. ");
+  }
+});
+
 function addUserToNewRoom(user){
   rooms["room"+numOfRooms] = new Array();
   user.room = "room"+numOfRooms;
@@ -287,18 +308,42 @@ io.on('connection', function(socket)        //callback that has default arg: soc
         rooms[room].canPlay = false;
         var winner = rooms[room][roomIndexOfWinner];
         var loser = rooms[room][roomIndexOfLoser];
-        socket.to(room).emit("gameover",winner,loser,win);
+        //update stats: do this whenever game ends: on finish, on logout, on quit.
+
+        var winnerName= winner.username;
+        var loserName= loser.username;
+
+        var winnerWins= winner.totalWins+1;
+        var winnerGames= winner.totalGames+1;
+        var winnerAcc= parseInt((winnerWins/winnerGames)*100);
+        var numMedals= parseInt(winnerWins/5);
+        userCollection.update({"username":winnerName}, {$set:{"tictacMaster":numMedals}});
+
+        var loserLosses= loser.totalLosses+1;
+        var loserGames= loser.totalGames+1;
+        var loserWins= loser.totalWins;
+        var loserAcc= (loserWins/loserGames)*100;
+
+       userCollection.update({"username":winnerName}, {$set:{"totalGames":winnerGames, "totalWins":winnerWins, "winningAccuracy":winnerAcc}});
+       userCollection.update({"username":loserName}, {$set: {"totalLosses":loserLosses, "totalGames":loserGames, "winningAccuracy":loserAcc}});
+
+       socket.emit("gameover",winner,loser, win, room);
+       socket.to(room).emit("gameover",winner,loser,win, room);
       }
     }
   });
   socket.on('disconnectMe', function(room)      //clicked Logout
   {
+    //need to get the user who disconnect and do totalLosses++, totalGames++;
+    //get other user and do totalWins++, and totalGames++;
     socket.to(room).emit('playerLeft');
     socket.disconnect();
   });
-  socket.on('gameQuit', function(room,username)      //quit game
+  socket.on('gameQuit', function(room)      //quit game
   {
-    socket.to(room).emit('playerLeft',username);
+    //need to get the user who disconnect and do totalLosses++, totalGames++;
+    //get other user and do totalWins++, and totalGames++;
+    socket.to(room).emit('playerLeft');
     delete rooms[room];
   });
 
@@ -316,21 +361,17 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     }
     socket.to(joinData[0].room).emit("playerJoined",user.username);
   });
-});
-mongoClient.connect(url, function(error, client)
-{
-  if(error)
-  {
-    console.log(error);
-  }
-  else
-  {
-    database= client.db('assignment4');   //use this db.
-    userCollection= database.collection('userCollection');    //create user collection.
-    console.log("Connected to database. ");
-  }
-});
 
+  socket.on('gameOverStats', function(winner, loser, pos,room, timeString, totalMoves, timer)
+  {
+    //Display stats
+    displayWinner= winner;
+    displayLoser= loser;
+    displayTime= timeString;
+    displayNumberOfMoves= totalMoves;
+    displayGameLasted= timer;
+  });
+});
 
 var usernamesArray= [];     //Will store all usernames on our server. This will help to check uniqueness of username.
 var head= `<!DOCTYPE html>
@@ -466,7 +507,8 @@ app.post('/addMe', function(req, res)     //handling post request for register
         "totalWins":0,
         "totalLosses":0,
         "tictacMaster":0,
-        "totalGames":0
+        "totalGames":0,
+        "winningAccuracy":0
        }
       usernamesArray.push(`${req.body.username}`);
       userCollection.insert(userToAdd, function(err, result)
@@ -495,7 +537,6 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
         loggedUser= array[l];
       }
     }
-//  console.log(loggedUser);
   if(loggedUser == null)   //username doesnt exist.
   {
     //send them back to login.
@@ -604,6 +645,7 @@ app.get('/game',isLoggedIn, function(req, res, next)
           </form>
         </div>
      </div>
+     <button id= 'displayStats' type='button' onclick="location.href='/displayStats'"> Display Game results </button>
    </body>
    <script src='./game.js'></script>
   </html>`;
@@ -612,23 +654,112 @@ app.get('/game',isLoggedIn, function(req, res, next)
   res.end(toServe);
 });
 
+app.get('/displayStats', isLoggedIn, function(req, res)
+{
+  //collect stats from database
+
+  var searchWinner= displayWinner.username;
+  var searchLoser= displayLoser.username;
+
+  var winMaster;
+  var winGames;
+  var winAcc;
+  var winLosses;
+  var winWins;
+
+  var losMaster;
+  var losAcc;
+  var losGames;
+  var losLosses;
+  var losWins;
+
+  userCollection.find({"username":searchWinner}).toArray().then(function(array)
+  {
+    console.log("Winner: "+array);
+    winMaster= array[0].tictacMaster;
+    winGames= array[0].totalGames;
+    winAcc= array[0].winningAccuracy;
+    winLosses= array[0].totalLosses;
+    winWins= array[0].totalWins;
+    userCollection.find({"username":searchLoser}).toArray().then(function(newArr)
+    {
+      console.log("Loser: "+newArr);
+      losMaster= newArr[0].tictacMaster;
+      losGames= newArr[0].totalGames;
+      losAcc= newArr[0].winningAccuracy;
+      losLosses= newArr[0].totalLosses;
+      losWins= newArr[0].totalWins;
+
+    var stats= `<!DOCTYPE html>
+    <html>
+    <head>
+    <title>Game results!</title>
+    <script src='./jquery-3.3.1.min.js'></script>
+    <script src='./data.js'></script>
+    <script src= './socket.io.js'></script>
+    </head>
+    <div id="game-results">
+    <div id='header-container'>
+     <div id='grid-container'>
+     <div id = 'smart-overlay'></div>
+     </div>
+     <h1> Here are the game results: </h1>
+     <p> Winner: `+displayWinner.firstname+`</p><p Loser: `+displayLoser.firstname+`</p><p> Game started at: `+displayTime+`</p> Total Moves: `+displayNumberOfMoves+`</p> <p> Total time for which game lasted: `+displayGameLasted+`</p>
+     <p Statistics of both the players: <p>
+     <table>
+     <tr>
+      <th style="width:50%"></th>
+      <th>`+displayWinner.firstname+`</th>
+      <th>`+displayLoser.firstname+`</th>
+    </tr>
+  <tr>
+    <td>Total Wins</td>
+    <td>`+winWins+`</td>
+    <td>`+losWins+`</td>
+  </tr>
+  <tr>
+    <td>Total Losses</td>
+    <td>`+winLosses+`</td>
+    <td>`+losLosses+`</td>
+  </tr>
+  <tr>
+    <td>Total Number of Games</td>
+    <td>`+winGames+`</td>
+    <td>`+losGames+`</td>
+  </tr>
+  <tr>
+    <td> Winning Accuracy </td>
+    <td>`+winAcc+`%</td>
+    <td>`+losAcc+`%</td>
+  </tr>
+  <tr>
+    <td>Tic-tac-Master Medals </td>
+    <td>`+winMaster+`</td>
+    <td>`+losMaster+`</td>
+  </tr>
+</table>
+
+   </div> <button type='button' onclick='location.href="/logout"'> Logout </button>
+   </div> <button type='button' onclick='location.href="/myStats"'> Go Home </button>`;
+
+   res.end(stats);
+ });
+ });
+});
 app.get('/myStats',isLoggedIn, function(req, res)
 {
   var currentUser= req.session.user;        //currentUser= logged in user.
   var logout= `<a href="/logout"> Logout </a>`;
   var dash= currentUser.firstname;
+  var userNameSearch= currentUser.username;
 
+  userCollection.find({"username":userNameSearch}).toArray().then(function(newArray)
+  {
+    var currWins= newArray[0].totalWins;
+    var currAcc= newArray[0].winningAccuracy;
+    var currLosses= newArray[0].totalLosses;
+    var currMedals= newArray[0].tictacMaster;
 
-  var games= `${req.session.user.totalGames}`;
-  var wins= `${req.session.user.totalWins}`;
-  if(games!=0)
-  {
-    var acc= (wins/(games))*100;
-  }
-  else
-  {
-    var acc= 0;
-  }
   var head= `<!DOCTYPE html>
   <html>
   <head>
@@ -665,10 +796,10 @@ app.get('/myStats',isLoggedIn, function(req, res)
 
   <div id="mySidenav" class="sidenav">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-  <p>Total Wins: `+`${req.session.user.totalWins}`+`</p>
-  <p>Total Losses: `+`${req.session.user.totalLosses}`+` </p>
-  <p> Winning Accuracy: `+acc+`%</p>
-  <a href="#" data-toggle="popover" data-trigger="focus" data-content="Tic-tac master medals are the medals awarded to players after they win 10 games. Keep earning more to become a master.">Tic-Tac-Master Medals: `+`${req.session.user.tictacMaster}`+`</a>
+  <p>Total Wins: `+currWins+`</p>
+  <p>Total Losses: `+currLosses+` </p>
+  <p> Winning Accuracy: `+currAcc+`%</p>
+  <p> Tic-Tac-Master Medals: `+currMedals+`</p>
   </div>
   <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; View Stats</span>
   <script>
@@ -678,11 +809,8 @@ app.get('/myStats',isLoggedIn, function(req, res)
   </script>
    </body></html>`;
 
-//  var newHead= stats html;
-//var endNew= stats html';
-  //var toServe= newHead+dash+endNew;
   res.end(head);
-  //res.end(toServe);
+});
 });
 app.get('/logout',isLoggedIn, function(req, res)
 {
