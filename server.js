@@ -328,7 +328,7 @@ io.on('connection', function(socket)        //callback that has default arg: soc
        userCollection.update({"username":loserName}, {$set: {"totalLosses":loserLosses, "totalGames":loserGames, "winningAccuracy":loserAcc}});
 
        socket.emit("gameover",winner,loser, win, room);
-       socket.to(room).emit("gameover",winner,loser,win, room);
+       socket.to(room).emit("gameover",winner,loser,win,room);
       }
     }
   });
@@ -339,12 +339,15 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     socket.to(room).emit('playerLeft');
     socket.disconnect();
   });
-  socket.on('gameQuit', function(room)      //quit game
+  socket.on('gameQuit', function(room,username)      //quit game
   {
     //need to get the user who disconnect and do totalLosses++, totalGames++;
     //get other user and do totalWins++, and totalGames++;
-    socket.to(room).emit('playerLeft');
-    delete rooms[room];
+    if(rooms[room]){
+      socket.to(room).emit('playerLeft',username);
+      delete rooms[room];
+      numOfRooms--;
+    }
   });
 
   socket.on('chat', function(message, room){

@@ -139,7 +139,7 @@ logoutBut.addEventListener('click', function()
 var quitBut= document.getElementById('quit');
 quitBut.addEventListener('click', function()
 {
-  socket.emit('gameQuit', userObj.room);
+  socket.emit('gameQuit', userObj.room,$('#username').text());
 });
 quitBut.addEventListener('click', function()
 {
@@ -170,7 +170,7 @@ socket.on('playerJoined', function(playerName)
 {
   alert(playerName+" joined!");
 });
-socket.on("gameover",function(winner,loser,pos, room){
+socket.on("gameover",function(winner,loser,pos,room){
 
   clearInterval(myTimer);
   socket.emit('gameOverStats', winner, loser, pos,room, timeString, totalMoves, timer.innerText);      //initialize everything
@@ -182,10 +182,10 @@ socket.on("gameover",function(winner,loser,pos, room){
 {
 
 }*/
-socket.on('playerLeft', function()
+socket.on('playerLeft', function(username)
 {
   clearInterval(myTimer);
-  alert('Other player left!');
+  alert(username + "has left the game");
   $('#game-body').hide();
 });
 
