@@ -39,7 +39,7 @@ mongoClient.connect(url, function(error, client)
   }
   else
   {
-  //  database= client.db('assignment4');
+    //database= client.db('assignment4');
     database= client.db('cmpt218_maggarwa');   //use this db.
     userCollection= database.collection('userCollection');    //create user collection.
     console.log("Connected to database. ");
@@ -818,7 +818,7 @@ app.get('/displayStats', isLoggedIn, function(req, res)
      <div id = 'smart-overlay'></div>
      </div>
      <header> Game results: </header>
-     <p> Winner: `+displayWinner.firstname+`</p><p Loser: `+displayLoser.firstname+`</p><p> Game started at: `+displayTime+`</p> Total Moves: `+displayNumberOfMoves+`</p> <p> Total time for which game lasted: `+displayGameLasted+`</p>
+     <p> Winner: `+displayWinner.firstname+`</p><p> Loser: `+displayLoser.firstname+`</p><p> Game started at: `+displayTime+`</p> Total Moves: `+displayNumberOfMoves+`</p> <p> Total time for which game lasted: `+displayGameLasted+`</p>
      <p Statistics of both the players: <p>
      <table>
      <tr>
