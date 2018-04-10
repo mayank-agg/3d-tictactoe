@@ -18,9 +18,8 @@ var mongoClient= require('mongodb').MongoClient;
 
 var database;
 var userCollection;
-//var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
-var url= 'mongodb://maggarwa:QoYdlD8f@127.0.0.1:27017/cmpt218_maggarwa?authSource=admin';
-var currentPlayers= [];
+var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
+//var currentPlayers= [];
 //create and keep track of running channels
 var rooms = new Object();
 var numOfRooms = 0;
@@ -39,8 +38,8 @@ mongoClient.connect(url, function(error, client)
   }
   else
   {
-    //database= client.db('assignment4');
-    database= client.db('cmpt218_maggarwa');   //use this db.
+    database= client.db('assignment4');
+    //database= client.db('cmpt218_maggarwa');   //use this db.
     userCollection= database.collection('userCollection');    //create user collection.
     console.log("Connected to database. ");
   }
@@ -718,7 +717,6 @@ app.get('/game',isLoggedIn, function(req, res, next)
  <head>
    <title>3D TicTacToe!</title>
    <script src='./jquery-3.3.1.min.js'></script>
-   <script src='./data.js'></script>
    <script src= './socket.io.js'></script>
    <link href = './game.css' rel = 'stylesheet' type='text/css'/>
    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -809,7 +807,6 @@ app.get('/displayStats', isLoggedIn, function(req, res)
     <title>Game results!</title>
     <script src='./jquery-3.3.1.min.js'></script>
     <link rel='stylesheet' href='./statscss.css'>
-    <script src='./data.js'></script>
     <script src= './socket.io.js'></script>
     </head>
     <div id="game-results">
