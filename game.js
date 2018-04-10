@@ -9,6 +9,7 @@ var mCells = new Object;
 window.onload = function(){
   $('#displayStats').hide();
   $('#waiting-message').show();
+  $('#goHome').hide();
   var options1 = {
     width:50,
     height:50,
@@ -129,7 +130,7 @@ function getcellGridNumber(id){
 var logoutBut= document.getElementById('logout-btn');
 logoutBut.addEventListener('click', function()
 {
-  socket.emit('disconnectMe',userObj.room);
+  socket.emit('disconnectMe',userObj.room,$('#username').text());
 //  socket.close();
 });
 logoutBut.addEventListener('click', function()
@@ -141,9 +142,8 @@ quitBut.addEventListener('click', function()
 {
   socket.emit('gameQuit', userObj.room,$('#username').text());
 });
-quitBut.addEventListener('click', function()
-{
-  location.href= '/myStats';
+socket.on("showStats",function(){
+  window.location.href= '/myStats';
 });
 socket.on('welcome', function(user)
 {
@@ -156,6 +156,12 @@ socket.on('newMove', function(symbol,col,row,grid)
 {
   totalMoves++;
   console.log(totalMoves);
+  if(totalMoves==27)
+  {
+    clearInterval(myTimer);
+    alert("Game is drawn! ");
+    socket.emit('gameDraw', userObj.room);
+  }
   col= col.toString();
   row= row.toString();
   var makeID= row+col+grid;
@@ -178,15 +184,19 @@ socket.on("gameover",function(winner,loser,pos,room){
   $('#game-body').hide();
   $('#displayStats').show();
 });
-/*socket.on('displayStats', winner, loser, pos, room, timeString)
-{
-
-}*/
 socket.on('playerLeft', function(username)
 {
   clearInterval(myTimer);
-  alert(username + "has left the game");
+  alert(username + " has left the game");
+//  window.location.href='/myStats';
+  $('#logout-btn').hide();
+  $('#quit').hide();
   $('#game-body').hide();
+  $('#goHome').show();
+});
+socket.on('updatedDB', function()
+{
+  location.href='/myStats';
 });
 
 document.forms[0].onsubmit = function () {

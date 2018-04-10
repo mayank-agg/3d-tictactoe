@@ -297,7 +297,8 @@ io.on('connection', function(socket)        //callback that has default arg: soc
       roomIndexOfWinner = 1;
       roomIndexOfLoser = 0;
     }
-    if((!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol) && rooms[room].canPlay == true){
+    if((!(rooms[room].lastKnownSymbol) || rooms[room].lastKnownSymbol != symbol) && rooms[room].canPlay == true)
+    {
       socket.emit('newMove',symbol, col, row, grid);
       socket.to(room).emit('newMove', symbol, col, row, grid);
       rooms[room].lastKnownSymbol = symbol;
@@ -312,42 +313,148 @@ io.on('connection', function(socket)        //callback that has default arg: soc
 
         var winnerName= winner.username;
         var loserName= loser.username;
+        var winnerWins;
+        var winnerGames;
+        var winnerAcc;
+        var numMedals;
+        var loserLosses;
+        var loserGames;
+        var loserWins;
+        var loserAcc;
+        userCollection.find({"username":winnerName}).toArray().then(function(array)
+        {
+          winnerWins= array[0].totalWins+1;
+          winnerGames= array[0].totalGames+1;
+          winnerAcc= parseInt((winnerWins/winnerGames)*100);
+          numMedals=parseInt(winnerWins/5);
+          userCollection.update({"username":winnerName}, {$set:{"tictacMaster":numMedals}});
+          userCollection.find({"username":loserName}).toArray().then(function(newArr)
+          {
+            loserLosses= newArr[0].totalLosses+1;
+            loserGames= newArr[0].totalGames+1;
+            loserWins= newArr[0].totalWins;
+            loserAcc= parseInt((loserWins/loserGames)*100);
 
-        var winnerWins= winner.totalWins+1;
-        var winnerGames= winner.totalGames+1;
-        var winnerAcc= parseInt((winnerWins/winnerGames)*100);
-        var numMedals= parseInt(winnerWins/5);
-        userCollection.update({"username":winnerName}, {$set:{"tictacMaster":numMedals}});
+            userCollection.update({"username":winnerName}, {$set:{"totalGames":winnerGames, "totalWins":winnerWins, "winningAccuracy":winnerAcc}});
+            userCollection.update({"username":loserName}, {$set: {"totalLosses":loserLosses, "totalGames":loserGames, "winningAccuracy":loserAcc}});
 
-        var loserLosses= loser.totalLosses+1;
-        var loserGames= loser.totalGames+1;
-        var loserWins= loser.totalWins;
-        var loserAcc= (loserWins/loserGames)*100;
-
-       userCollection.update({"username":winnerName}, {$set:{"totalGames":winnerGames, "totalWins":winnerWins, "winningAccuracy":winnerAcc}});
-       userCollection.update({"username":loserName}, {$set: {"totalLosses":loserLosses, "totalGames":loserGames, "winningAccuracy":loserAcc}});
-
-       socket.emit("gameover",winner,loser, win, room);
-       socket.to(room).emit("gameover",winner,loser,win,room);
+            socket.emit("gameover",winner,loser, win, room);
+            socket.to(room).emit("gameover",winner,loser,win,room);
+          });
+        });
       }
     }
   });
-  socket.on('disconnectMe', function(room)      //clicked Logout
+  socket.on('gameDraw', function(room)
   {
-    //need to get the user who disconnect and do totalLosses++, totalGames++;
-    //get other user and do totalWins++, and totalGames++;
-    socket.to(room).emit('playerLeft');
-    socket.disconnect();
+    var player1 = rooms[room][0];
+    var player2 = rooms[room][1];
+
+    var p1totGames;
+    var p2totGames;
+    var p1wins;
+
+    var p1acc;
+    var p2acc;
+    var p2wins;
+
+    userCollection.find({"username":player1.username}).toArray().then(function(array)
+    {
+      p1totGames= array[0].totalGames+1;
+      p1wins= array[0].totalWins;
+      p1acc= parseInt((p1wins/p1totGames)*100);
+
+      userCollection.update({"username":player1.username}, {$set:{"totalGames":p1totGames, "winningAccuracy":p1acc}});
+      userCollection.find({"username":player2.username}).toArray().then(function(newArr)
+      {
+        p2totGames= newArr[0].totalGames+1;
+        p2wins= newArr[0].totalWins;
+        p2acc= parseInt((p2wins/p2totGames)*100);
+        userCollection.update({"username":player2.username}, {$set:{"totalGames":p2totGames, "winningAccuracy":p2acc}});
+        socket.emit('updatedDB');
+      });
+    });
+  });
+  socket.on('disconnectMe', function(room,username)      //clicked Logout
+  {
+    var winName = rooms[room][1].username;
+    socket.to(room).emit('playerLeft',username);
+    if(rooms[room][1].username == username){
+      winName = rooms[room][0].username;
+    }
+
+    delete rooms[room];
+    numOfRooms--;
+
+    var newLosses;
+    var newGames;
+    var newAcc;
+    var newWins;
+
+    var WGames;
+    var WAcc;
+    var WWins;
+
+
+
+    userCollection.find({"username":username}).toArray().then(function(array)
+    {
+      newLosses= array[0].totalLosses+1;
+      newGames= array[0].totalGames+1;
+      newWins= array[0].totalWins;
+      newAcc= parseInt((newWins/newGames)*100);
+
+      userCollection.update({"username":username}, {$set:{"totalGames":newGames, "winningAccuracy":newAcc, 'totalLosses':newLosses}});
+      userCollection.find({"username":winName}).toArray().then(function(newArr)
+      {
+        WGames= newArr[0].totalGames+1;
+        WWins= newArr[0].totalWins+1;
+        WAcc= parseInt((WWins/WGames)*100);
+        userCollection.update({"username":winName}, {$set:{"totalGames":WGames, "totalWins":WWins, "winningAccuracy":WAcc}});
+        socket.disconnect();
+      });
+    });
   });
   socket.on('gameQuit', function(room,username)      //quit game
   {
-    //need to get the user who disconnect and do totalLosses++, totalGames++;
-    //get other user and do totalWins++, and totalGames++;
-    if(rooms[room]){
-      socket.to(room).emit('playerLeft',username);
-      delete rooms[room];
-      numOfRooms--;
+    var winName = rooms[room][1].username;
+    socket.to(room).emit('playerLeft',username);
+    if(rooms[room][1].username == username){
+      winName = rooms[room][0].username;
     }
+    delete rooms[room];
+    numOfRooms--;
+
+
+    var newLosses;
+    var newGames;
+    var newAcc;
+    var newWins;
+
+    var WGames;
+    var WAcc;
+    var WWins;
+
+
+
+    userCollection.find({"username":username}).toArray().then(function(array)
+    {
+      console.log(array[0]);
+      newLosses= array[0].totalLosses+1;
+      newGames= array[0].totalGames+1;
+      newWins= array[0].totalWins;
+      newAcc= parseInt((newWins/newGames)*100);
+
+      userCollection.update({"username":username}, {$set:{"totalGames":newGames, "winningAccuracy":newAcc, 'totalLosses':newLosses}});
+      userCollection.find({"username":winName}).toArray().then(function(newArr)
+      {
+        WGames= newArr[0].totalGames+1;
+        WWins= newArr[0].totalWins+1;
+        WAcc= parseInt((WWins/WGames)*100);
+        userCollection.update({"username":winName}, {$set:{"totalGames":WGames, "totalWins":WWins, "winningAccuracy":WAcc}});
+        socket.emit("showStats");
+      });
+    });
   });
 
   socket.on('chat', function(message, room){
@@ -566,7 +673,7 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
     {
       console.log("in here");
       console.log(loggedUser);
-
+    //  console.log(loggedUser.totalGames);
       //4) attach session_id
 
       //Update count on succesfull login:
@@ -649,6 +756,7 @@ app.get('/game',isLoggedIn, function(req, res, next)
         </div>
      </div>
      <button id= 'displayStats' type='button' onclick="location.href='/displayStats'"> Display Game results </button>
+     <button id='goHome' type='button' onclick='location.href="/myStats"'> Go Home </button>
    </body>
    <script src='./game.js'></script>
   </html>`;
@@ -698,6 +806,7 @@ app.get('/displayStats', isLoggedIn, function(req, res)
     <head>
     <title>Game results!</title>
     <script src='./jquery-3.3.1.min.js'></script>
+    <link rel='stylesheet' href='./statscss.css'>
     <script src='./data.js'></script>
     <script src= './socket.io.js'></script>
     </head>
@@ -706,7 +815,7 @@ app.get('/displayStats', isLoggedIn, function(req, res)
      <div id='grid-container'>
      <div id = 'smart-overlay'></div>
      </div>
-     <h1> Here are the game results: </h1>
+     <header> Game results: </header>
      <p> Winner: `+displayWinner.firstname+`</p><p Loser: `+displayLoser.firstname+`</p><p> Game started at: `+displayTime+`</p> Total Moves: `+displayNumberOfMoves+`</p> <p> Total time for which game lasted: `+displayGameLasted+`</p>
      <p Statistics of both the players: <p>
      <table>
