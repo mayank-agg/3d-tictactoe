@@ -18,7 +18,8 @@ var mongoClient= require('mongodb').MongoClient;
 
 var database;
 var userCollection;
-var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
+//var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
+var url= 'mongodb://maggarwa:QoYdlD8f@127.0.0.1:27017/cmpt218_maggarwa?authSource=admin';
 //var currentPlayers= [];
 //create and keep track of running channels
 var rooms = new Object();
@@ -38,8 +39,8 @@ mongoClient.connect(url, function(error, client)
   }
   else
   {
-    database= client.db('assignment4');
-    //database= client.db('cmpt218_maggarwa');   //use this db.
+    //database= client.db('assignment4');
+    database= client.db('cmpt218_maggarwa');   //use this db.
     userCollection= database.collection('userCollection');    //create user collection.
     console.log("Connected to database. ");
   }
