@@ -4,7 +4,7 @@ var session= require('express-session');
 var flash= require('express-flash');
 var app= express();
 app.use(flash());
-var port= 33108;
+var port= 3000;
 var mUser;
 
 var server= http.createServer(app).listen(port);

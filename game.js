@@ -1,4 +1,4 @@
-var socket= io("http://cmpt218.csil.sfu.ca:33108");
+var socket= io("http://localhost:3000");
 var playername;
 var userObj;
 var clickId;
