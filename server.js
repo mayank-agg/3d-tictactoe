@@ -1,4 +1,5 @@
 var express= require('express');
+var bcrypt = require('bcrypt');
 var http= require('http');
 var session= require('express-session');
 var flash= require('express-flash');
@@ -9,7 +10,7 @@ var mUser;
 
 var server= http.createServer(app).listen(port);
 var io= require('socket.io')(server);
-//login head and end. Body will be served dynamically.
+// login head and end. Body will be served dynamically.
 app.use(express.static("."));
 
 var playerName;
@@ -19,9 +20,9 @@ var mongoClient= require('mongodb').MongoClient;
 var database;
 var userCollection;
 var url="mongodb://mayankandkaran:assignment4game@ds119129.mlab.com:19129/assignment4";
-//var url= 'mongodb://maggarwa:QoYdlD8f@127.0.0.1:27017/cmpt218_maggarwa?authSource=admin';
-//var currentPlayers= [];
-//create and keep track of running channels
+// var url= 'mongodb://maggarwa:QoYdlD8f@127.0.0.1:27017/cmpt218_maggarwa?authSource=admin';
+// var currentPlayers= [];
+// create and keep track of running channels
 var rooms = new Object();
 var numOfRooms = 0;
 
@@ -36,11 +37,9 @@ mongoClient.connect(url, function(error, client)
   if(error)
   {
     console.log(error);
-  }
-  else
-  {
+  } else {
     database= client.db('assignment4');
-    //database= client.db('cmpt218_maggarwa');   //use this db.
+    // database= client.db('cmpt218_maggarwa');   //use this db.
     userCollection= database.collection('userCollection');    //create user collection.
     console.log("Connected to database. ");
   }
@@ -58,7 +57,7 @@ function joinRoom(user,socket){
     addUserToNewRoom(user);
     socket.join("room"+(numOfRooms-1));
     return [user,false];
-  }else{
+  } else {
     var pendingRoom = "room" + '' + (numOfRooms - 1);
     if(rooms[pendingRoom].length < 2){
       socket.join(pendingRoom);
@@ -71,7 +70,7 @@ function joinRoom(user,socket){
       bitmap.fill(0);
       rooms[pendingRoom].bitMap = bitmap;
       return [user,true];
-    }else{
+    } else {
       addUserToNewRoom(user);
       socket.join("room"+(numOfRooms-1));
       return [user,false];
@@ -97,8 +96,8 @@ function didWinOn3DPlane(bitmap,move){
   var countDiagCol = 0;
 
   var gridNumber = move.grid.charAt(move.grid.length-1)-1;
-  //straight up wins
-  for(var i=0;i<3;i++){
+  // straight up wins
+  for(var i=0;i<3;i++) {
     winPosStraight[gridNumber] = move;
     if(i != gridNumber){
       if(bitmap[(move.row*3 + move.col) + (9*i)] != move.bitcode){
@@ -114,13 +113,13 @@ function didWinOn3DPlane(bitmap,move){
     }
   }
 
-  //diagonal row wins
+  // diagonal row wins
   for(var i=0;i<3;i++){
     winDiagStraightRow[move.col] = move;
     if(i != gridNumber && i != move.col){
       if(bitmap[(move.row*3 + i) + (9*i)] != move.bitcode){
         break;
-      }else{
+      } else {
         var pos = {col:i,row:move.row,grid:"grid"+(i+1)};
         winDiagStraightRow[i] = pos;
         countDiagRow++;
@@ -132,16 +131,16 @@ function didWinOn3DPlane(bitmap,move){
   }
 
   //diagonal column wins
-  for(var i=0;i<3;i++){
+  for(var i=0;i<3;i++) {
     winDiagStraightCol[move.row] = move;
     if(i != gridNumber && i !== move.row){
       if(bitmap[(i*3 + move.col + (9*i))] != move.bitcode){
         break;
-      }else{
+      } else {
         var pos = {col:move.col,row:i,grid:"grid"+(i+1)};
         winDiagStraightCol[i] = pos;
         countDiagCol++;
-        if(countDiagCol >= 2){
+        if(countDiagCol >= 2) {
           return winDiagStraightCol;
         }
       }
@@ -151,7 +150,7 @@ function didWinOn3DPlane(bitmap,move){
   // diagonal wins
   var isDiagonalSol = move.row == 0 && move.col == 0 || move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2
                       || move.row == 2 && move.col == 2 || move.row == 1 && move.col == 1;
-  if(isDiagonalSol){
+  if(isDiagonalSol) {
     if(move.row == 2 && move.col == 0 || move.row == 0 && move.col == 2 || move.col == 1 && move.col == move.row){
       var i = 0;
       var j = 2;
@@ -172,7 +171,7 @@ function didWinOn3DPlane(bitmap,move){
         i++;
         j--;
       }
-    }else if(move.row == move.col){
+    } else if(move.row == move.col) {
       for(var i=0;i<3;i++){
         winPosDiagonalLeft[move.row] = move;
         if(i != move.row && i != gridNumber){
@@ -189,13 +188,13 @@ function didWinOn3DPlane(bitmap,move){
         }
       }
     }
-  }else{
+  } else {
     return false;
   }
   return false;
 }
 
-function didWinOn1DPlane(bitmap,move){
+function didWinOn1DPlane(bitmap,move) {
   var winPosCol = new Array(3);
   var winPosRow = new Array(3);
   var winPosDiagonalRight = new Array(3);
@@ -397,8 +396,6 @@ io.on('connection', function(socket)        //callback that has default arg: soc
     var WAcc;
     var WWins;
 
-
-
     userCollection.find({"username":username}).toArray().then(function(array)
     {
       newLosses= array[0].totalLosses+1;
@@ -460,7 +457,7 @@ io.on('connection', function(socket)        //callback that has default arg: soc
   });
 
   socket.on('chat', function(message, room){
-    socket.to(room).emit('message',message);
+    socket.to(room).emit('message', message);
   });
 
   socket.on('JoinRoom',function(user){
@@ -604,36 +601,40 @@ app.post('/addMe', function(req, res)     //handling post request for register
       console.log("exists")
       req.flash('error', "Sorry, this username is taken. Please choose a different one. ");
       res.redirect('/register');
-    }
-    else
-    {
-       var userToAdd= {
-        "username": `${req.body.username}`,
-        "password":`${req.body.password}`,
-        "email":`${req.body.email}`,
-        "gender":`${req.body.gender}`,
-        "firstname":`${req.body.firstname}`,
-        "lastname":`${req.body.lastname}`,
-        "age":`${req.body.age}`,
-        "count":3,
-        "totalWins":0,
-        "totalLosses":0,
-        "tictacMaster":0,
-        "totalGames":0,
-        "winningAccuracy":0
-       }
-      usernamesArray.push(`${req.body.username}`);
-      userCollection.insert(userToAdd, function(err, result)
-      {
-        if(err)
-        {
-          console.log(err);
+    } else {
+      bcrypt.hash(pass, 10, function(err, hashedPassword) {
+        if(err) {
+          throw new Error("password cannot be encrypted. :"+err);
         }
-      });
-       req.flash('success', 'Thank you for registering. Please login');
-       res.redirect('/');
-     }
-});
+        console.log("hashed password: "+hashedPassword);
+        var userToAdd= {
+          "username": `${req.body.username}`,
+          "password": hashedPassword,
+          "email":`${req.body.email}`,
+          "gender":`${req.body.gender}`,
+          "firstname":`${req.body.firstname}`,
+          "lastname":`${req.body.lastname}`,
+          "age":`${req.body.age}`,
+          "count":3,
+          "totalWins":0,
+          "totalLosses":0,
+          "tictacMaster":0,
+          "totalGames":0,
+          "winningAccuracy":0
+          }
+        usernamesArray.push(`${req.body.username}`);
+        userCollection.insert(userToAdd, function(err, result)
+        {
+          if(err)
+          {
+            console.log(err);
+          }
+        });
+          req.flash('success', 'Thank you for registering. Please login');
+          res.redirect('/');
+        });
+      };
+  });
 });
 
 app.post('/login', function(req, res)     //No next needed because we dont have any other middlewares for '/login' post request
@@ -671,38 +672,40 @@ app.post('/login', function(req, res)     //No next needed because we dont have 
         res.redirect('/');
       }
     }
-    if(loggedUser.password == `${req.body.password}`)
-    {
-      console.log("in here");
-      console.log(loggedUser);
-    //  console.log(loggedUser.totalGames);
-      //4) attach session_id
+    bcrypt.compare(`${req.body.password}`, loggedUser.password, (err, result) => {
+      if(err) {
+        throw new Error("Passwords cannot be compared!: "+err);
+      } 
+      if (result) {
+        console.log("in here");
+        console.log(loggedUser);
+      //  console.log(loggedUser.totalGames);
+        //4) attach session_id
 
-      //Update count on succesfull login:
-      var newCount= 3;
-      userCollection.update({"username":`${req.body.username}`}, {$set:{"count":newCount}});
-      console.log("Changed count to 3.");
-      console.log(loggedUser);
-      req.session.user= loggedUser;
-            //Attaching full user to session. Could also attach only username etc.
-      res.redirect('/myStats');     //myStats will have this session.
-    }
-    else    //password doesnt match.
-    {
-      var updatedCount= loggedUser.count-1;
-      userCollection.update({"username":`${req.body.username}`}, {$set:{"count":updatedCount}});
-      if(loggedUser.count >0)
-      {
-        req.flash('error', "Wrong password: "+loggedUser.count+" trials left");
-        res.redirect('/');
+        //Update count on succesfull login:
+        var newCount= 3;
+        userCollection.update({"username":`${req.body.username}`}, {$set:{"count":newCount}});
+        console.log("Changed count to 3.");
+        console.log(loggedUser);
+        req.session.user= loggedUser;
+              //Attaching full user to session. Could also attach only username etc.
+        res.redirect('/myStats');     //myStats will have this session.
+      } else {
+        var updatedCount= loggedUser.count-1;
+        userCollection.update({"username":`${req.body.username}`}, {$set:{"count":updatedCount}});
+        if(loggedUser.count >0)
+        {
+          req.flash('error', "Wrong password: "+loggedUser.count+" trials left");
+          res.redirect('/');
+        }
+        else
+        {
+          blockedUsernames.push(`${req.body.username}`);
+          req.flash('error', "Account suspended");
+          res.redirect('/');
+        }
       }
-      else
-      {
-        blockedUsernames.push(`${req.body.username}`);
-        req.flash('error', "Account suspended");
-        res.redirect('/');
-      }
-    }
+    });
    }
  });
 });
